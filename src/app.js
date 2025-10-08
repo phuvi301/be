@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 import connectDB, { comments } from "./config/db.js";
 import express from "express";
-import mongoose from "mongoose";
 dotenv.config();
 
 // Kết nối DB trước khi khởi động server

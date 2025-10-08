@@ -1,4 +1,3 @@
-import { text } from "express";
 import mongoose from "mongoose";
 
 const connectDB = async () => {
@@ -6,7 +5,7 @@ const connectDB = async () => {
         await mongoose.connect(process.env.MONGO_URI, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
-            dbName: 'sample_mflix'
+            dbName: 'sample_mflix'  // Cách 1: Chỉ định DB khi kết nối
         });
         console.log("MongoDB connected");
     } catch (error) {
@@ -28,7 +27,7 @@ DBSchema.methods.greet = function () {
   return `Hello, ${this.name}!`;
 };
 
-// const dbConn = mongoose.connection.useDb("sample_mflix");
+// const dbConn = mongoose.connection.useDb("sample_mflix"); ----> Cách 2
 export const comments = mongoose.model("comments", DBSchema);
 
 export default connectDB;
