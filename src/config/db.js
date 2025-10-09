@@ -28,6 +28,6 @@ DBSchema.methods.greet = function () {
 };
 
 // const dbConn = mongoose.connection.useDb("sample_mflix"); ----> Cách 2
-export const comments = mongoose.model("comments", DBSchema);
+const comments = mongoose.model("comments", DBSchema);
 
-export default connectDB;
+export default {connectDB, comments};
