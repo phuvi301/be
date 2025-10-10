@@ -2,7 +2,7 @@ import express from 'express';
 
 const router = express.Router();
 
-router.get('/search', (req, res) => {
+router.get('/', (req, res) => {
     // Xử lý tìm kiếm
     res.send('Search endpoint');
 });

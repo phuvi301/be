@@ -2,14 +2,34 @@ import express from 'express';
 
 const router = express.Router();
 
-router.get('/tracks/:id', (req, res) => {
+router.get('/:id', (req, res) => {
     // Lấy danh sách bài hát
     res.send('Get tracks endpoint');
 });
 
-router.post('/tracks', (req, res) => {
-    // Lấy thông tin chi tiết bài hát
-    res.send('Get track details endpoint');
+router.get('/:id/lyrics', (req, res) => {
+    // Lấy lời bài hát
+    res.send('Get lyrics endpoint');
+});
+
+router.get('/:userId/lists', (req, res) => {
+    // Lấy danh sách bài hát của người dùng
+    res.send('Get user track lists endpoint');
+});
+
+router.post('/', (req, res) => {
+    // Thêm bài hát mới cho người dùng
+    res.send('Create user track list endpoint');
+});
+
+router.put('/:id', (req, res) => {
+    // Cập nhật thông tin bài hát trong danh sách của người dùng
+    res.send('Update user track in list endpoint');
+});
+
+router.delete('/:id', (req, res) => {
+    // Xoá bài hát khỏi danh sách của người dùng
+    res.send('Delete user track from list endpoint');
 });
 
 export default router;

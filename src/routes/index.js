@@ -4,4 +4,19 @@ import searchRoutes from "./search.js";
 import playlistRoutes from "./playlist.js";
 import userRoutes from "./user.js";
 
-export default { auth: authRoutes, track: trackRoutes, search: searchRoutes, playlist: playlistRoutes, user: userRoutes };
+const routes = {
+    auth: authRoutes,
+    tracks: trackRoutes,
+    searchs: searchRoutes,
+    playlists: playlistRoutes,
+    users: userRoutes,
+    use: function (app) {
+        Object.entries(this).forEach(([key, value]) => {
+            if (key !== "use") {
+                app.use(`/api/${key}`, value);
+            }
+        });
+    },
+};
+
+export default routes;

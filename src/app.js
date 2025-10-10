@@ -29,12 +29,9 @@ app.use(express.raw());
 app.use(express.text());
 
 // Routes
-app.use("/api/auth", routes.auth);
-app.use("/api/tracks", routes.track);
-app.use("/api/search", routes.search);
-app.use("/api/playlists", routes.playlist);
-app.use("/api/users", routes.user);
+routes.use(app);
 
-app.listen(port, function(){
+// Start server
+app.listen(port, () => {
     console.log(`Your app running on http://localhost:${port}`);
 })
