@@ -1,0 +1,25 @@
+import mongoose from "mongoose";
+
+const TrackSchema = new mongoose.Schema(
+    {
+        title: { type: String, required: true },
+        artist: { type: String, required: true },
+        genre: { type: String },
+        duration: { type: Number, required: true },
+        audioUrl: { type: String, required: true },
+        thumbnailUrl: { type: String },
+        owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+        playCount: { type: Number, default: 0 },
+        likeCount: { type: Number, default: 0 },
+        commentCount: { type: Number, default: 0 },
+        comments: { type: mongoose.Schema.Types.ObjectId, ref: "Comments" },
+        status: { type: String, enum: ["public", "private"], default: "public" },
+        tags: [{ type: String }],
+        lyrics: { type: mongoose.Schema.Types.ObjectId, ref: "Lyrics" },
+        // bitrate: { type: Number }, // in kbps
+        // sampleRate: { type: Number }, // in Hz
+    },
+    { timestamps: true }
+);
+
+export default mongoose.model("Track", TrackSchema);
