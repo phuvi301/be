@@ -1,11 +1,16 @@
 import express from "express";
 import dotenv from "dotenv";
-import cors from "cors";
-import connectDB, { comments } from "./config/db.js";
+import db from "./config/db.js";
+import express from "express";
+import cors from "cors"
+import cookieParser from "cookie-parser";
+
+import routes from "./routes/index.js";
+
 dotenv.config();
 
 // Kết nối DB trước khi khởi động server
-await connectDB();
+await db.connectDB();
 
 
 const app = express(); 
@@ -18,12 +23,23 @@ app.use(cors({
 app.use(express.json());
 const port = process.env.PORT || 5000;
 
+app.use(cors({
+    origin: 'localhost:3000',
+    credentials: true,
+    methods: 'GET,PUT,POST,DELETE',
+    preflightContinue: false,
+    optionsSuccessStatus: 204
+}));
+app.use(cookieParser());
+app.use(express.urlencoded({ extended: true, parameterLimit: 50000 }));
+app.use(express.json());
+app.use(express.raw());
+app.use(express.text());
 
-app.get('/', async (req, res) => {
-    const user = await comments.findOne({email: "mercedes_tyler@fakegmail.com"});
-    res.json({message: user.greet()});
-});
+// Routes
+routes.use(app);
 
-app.listen(port, function(){
-    console.log(`Your app is running on http://localhost:${port}`);
+// Start server
+app.listen(port, () => {
+    console.log(`Your app running on http://localhost:${port}`);
 })
