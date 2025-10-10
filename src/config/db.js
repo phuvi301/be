@@ -5,6 +5,8 @@ const connectDB = async () => {
         await mongoose.connect(process.env.MONGO_URI, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 5000,
+            ssl: true,
             dbName: 'sample_mflix'  // Cách 1: Chỉ định DB khi kết nối
         });
         console.log("MongoDB connected");
@@ -24,10 +26,10 @@ const DBSchema = new mongoose.Schema({
 });
 
 DBSchema.methods.greet = function () {
-  return `Hello, ${this.name}!`;
+  return `Hello, ${this.name}!, your email is ${this.email}. You commented on movie ID: ${this.movie_id} at ${this.date}. Comment: ${this.text}`;
 };
 
-// const dbConn = mongoose.connection.useDb("sample_mflix"); ----> Cách 2
+// const dbConn = mongoose.connection.useDb("sample_mflix"); // ----> Cách 2
 export const comments = mongoose.model("comments", DBSchema);
 
 export default connectDB;
