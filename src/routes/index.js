@@ -3,6 +3,7 @@ import trackRoutes from "./track.js";
 import searchRoutes from "./search.js";
 import playlistRoutes from "./playlist.js";
 import userRoutes from "./user.js";
+import commentRoutes from "./comments.js";
 
 const routes = {
     auth: authRoutes,
@@ -10,6 +11,7 @@ const routes = {
     searchs: searchRoutes,
     playlists: playlistRoutes,
     users: userRoutes,
+    comments: commentRoutes,
     use: function (app) {
         Object.entries(this).forEach(([key, value]) => {
             if (key !== "use") {

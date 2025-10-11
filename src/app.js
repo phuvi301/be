@@ -24,7 +24,7 @@ app.use(express.json());
 const port = process.env.PORT || 5000;
 
 app.use(cors({
-    origin: 'localhost:3000',
+    origin: '*',
     credentials: true,
     methods: 'GET,PUT,POST,DELETE',
     preflightContinue: false,
