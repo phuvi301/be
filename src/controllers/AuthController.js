@@ -16,29 +16,30 @@ const AuthController = {
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
 
-            const newUser = new User({ username, email, hashedPassword });
+            const newUser = new User({ username, email, password: hashedPassword });
             const { password: _, ...user } = await newUser.save();
 
             res.status(200).json({ message: "Registered successfully", data: user });
         } catch (error) {
+            console.log(error);
             res.status(500).json({ message: "Server error", error: error.message });
         }
     },
     signin: async (req, res) => {
         try {
-            const { username, password } = req.body;
-            if (!username || !password) return res.status(400).json({ message: "Username and password are required" });
+            const { email, password } = req.body;
+            if (!email || !password) return res.status(400).json({ message: "Email and password are required" });
 
-            const user = await User.findOne({ username });
-            if (!user) return res.status(401).json({ message: "Username or password is unpredicted" });
+            const user = await User.findOne({ email });
+            if (!user) return res.status(401).json({ message: "Email or password is unpredicted" });
 
             const isMatch = await bcrypt.compare(password, user.password);
-            if (!isMatch) return res.status(401).json({ message: "Username or password is unpredicted" });
+            if (!isMatch) return res.status(401).json({ message: "Email or password is unpredicted" });
 
             const accessToken = jwt.sign({ id: user._id }, process.env.JWT_ACCESS_KEY, { expiresIn: "1m" });
             const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_REFRESH_KEY, { expiresIn: "7d" });
 
-            const { password: _, ...updateUser } = await newUser.save();
+            const { password: _, ...updateUser } = user._doc;
 
             const newRefreshToken = new RefreshToken({ token: refreshToken, user: user._id });
             await newRefreshToken.save();

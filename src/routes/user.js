@@ -1,15 +1,10 @@
 import express from 'express';
+import UserController from '../controllers/UserController.js';
 
 const router = express.Router();
 
-router.get('/:id', (req, res) => {
-    // Lấy nghệ sĩ
-    res.send('Get artists endpoint');
-});
+router.get('/:id', UserController.getUser);
 
-router.put('/:id', (req, res) => {
-    // Lấy thông tin chi tiết nghệ sĩ
-    res.send('Get artist details endpoint');
-});
+router.put('/:id', UserController.updateUser);
 
 export default router;
