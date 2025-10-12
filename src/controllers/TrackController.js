@@ -8,7 +8,7 @@ const TrackController = {
             if (!title) return res.status(400).json({ message: "Title is required" });
 
             const track = await Track.findOne({ title })
-            if (!track) return res.status(401).json({ message: "Track not found" });
+            if (!track) return res.status(404).json({ message: "Track not found" });
 
             // const trackData = new Track(track);
             // await trackData.save();
