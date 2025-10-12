@@ -1,11 +1,10 @@
 import express from 'express';
+import TrackController from '../controllers/TrackController.js';
 
 const router = express.Router();
 
-router.get('/:id', (req, res) => {
-    // Lấy danh sách bài hát
-    res.send('Get tracks endpoint');
-});
+// router.get('/:id', TrackController.getTrack);
+router.post('/:id', TrackController.getTrack);
 
 router.get('/:id/lyrics', (req, res) => {
     // Lấy lời bài hát

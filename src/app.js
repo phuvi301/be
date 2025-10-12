@@ -1,7 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
 import db from "./config/db.js";
-import express from "express";
 import cors from "cors"
 import cookieParser from "cookie-parser";
 
@@ -14,14 +13,8 @@ await db.connectDB();
 
 
 const app = express(); 
-// Cho phép frontend truy cập API
-app.use(cors({ 
-    origin: `${process.env.FRONTEND_URL}$`, // Thay đổi theo url frontend
-    methods: ["GET", "POST", "PUT", "DELETE"], // Các phương thức cho phép
-    credentials: true
-}));
-app.use(express.json());
-const port = process.env.PORT || 5000;
+
+const port = process.env.PORT || 8080;
 
 app.use(cors({
     origin: '*',
