@@ -1,7 +1,8 @@
 import express from "express";
-import dotenv from "dotenv";
+import "dotenv/config";
+// import dotenv from "dotenv";
 import db from "./config/db.js";
-import cors from "cors"
+import cors from "cors";
 import cookieParser from "cookie-parser";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -9,11 +10,10 @@ import fetch from "node-fetch";
 
 import routes from "./routes/index.js";
 
-dotenv.config({ path: './.env' });
+// dotenv.config();
 
 // Kết nối DB trước khi khởi động server
 await db.connectDB();
-
 
 const app = express(); 
 

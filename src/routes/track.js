@@ -4,7 +4,7 @@ import TrackController from '../controllers/TrackController.js';
 const router = express.Router();
 
 // router.get('/:id', TrackController.getTrack);
-router.post('/:id', TrackController.getTrack);
+router.get('/:id', TrackController.getTrack);
 
 router.get('/:id/lyrics', (req, res) => {
     // Lấy lời bài hát
