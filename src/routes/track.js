@@ -3,8 +3,11 @@ import TrackController from '../controllers/TrackController.js';
 
 const router = express.Router();
 
-// router.get('/:id', TrackController.getTrack);
-router.post('/:id', TrackController.getTrack);
+router.get('/:id', TrackController.getTrack);
+
+router.get(/^\/(.+\.m3u8)$/, TrackController.handleM3u8);
+
+router.get(/^\/(.+\.ts)$/, TrackController.handleTs);
 
 router.get('/:id/lyrics', (req, res) => {
     // Lấy lời bài hát
