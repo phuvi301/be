@@ -1,7 +1,9 @@
 import express from 'express';
+import multer from "multer";
 import TrackController from '../controllers/TrackController.js';
 
 const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
 router.get('/:id', TrackController.getTrack);
 
@@ -19,10 +21,11 @@ router.get('/:userId/lists', (req, res) => {
     res.send('Get user track lists endpoint');
 });
 
-router.post('/', (req, res) => {
-    // Thêm bài hát mới cho người dùng
-    res.send('Create user track list endpoint');
-});
+router.post('/', upload.single('file'), TrackController.handleTrack);
+
+router.post('/reset', TrackController.resetTrack)
+
+router.post('/upload', TrackController.uploadTrack);
 
 router.put('/:id', (req, res) => {
     // Cập nhật thông tin bài hát trong danh sách của người dùng
