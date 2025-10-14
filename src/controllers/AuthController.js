@@ -20,9 +20,37 @@ const AuthController = {
         // Xử lý đăng nhập
         res.send('Login endpoint');
     },
+<<<<<<< Updated upstream
     logout: (req, res) => {
         // Xử lý đăng xuất
         res.send('Logout endpoint');
+=======
+    refresh: async (req, res) => {
+        try {
+            const refreshToken = req.cookies.refreshToken;
+            if (!refreshToken) return res.status(401).json({ message: "Unauthenticated" });
+            const refreshTokenDoc = await RefreshToken.findOne({ token: refreshToken });
+            if (!refreshTokenDoc) return res.status(401).json({ message: "Unauthenticated" });
+            jwt.verify(refreshToken, process.env.JWT_REFRESH_KEY, async (err, user) => {
+                if (err || refreshTokenDoc.user !== user.id) return res.status(403).json({ message: "Invalid token" });
+                await RefreshToken.deleteOne({ token: refreshToken });
+                const newAccessToken = jwt.sign({ id: user.id }, process.env.JWT_ACCESS_KEY, { expiresIn: "1m" });
+                const newRefreshToken = jwt.sign({ id: user.id }, process.env.JWT_REFRESH_KEY, { expiresIn: "7d" });
+                const newRefreshTokenDoc = new RefreshToken({ token: newRefreshToken, user: user.id });
+                await newRefreshTokenDoc.save();
+                res.cookie("refreshToken", newRefreshToken, {
+                    httpOnly: true,
+                    secure: false,
+                    path: "/",
+                    sameSite: "strict",
+                    maxAge: 7 * 24 * 60 * 60 * 1000,
+                });
+                res.status(200).json({ message: "Refresh successfully", data: { accessToken: newAccessToken } });
+            });
+        } catch (error) {
+            res.status(500).json({ message: "Server error", error: error.message });
+        }
+>>>>>>> Stashed changes
     },
     getProfile: (req, res) => {
         // Lấy thông tin người dùng
