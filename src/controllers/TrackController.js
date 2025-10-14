@@ -106,7 +106,8 @@ const TrackController = {
 
             // Upload thư mục HLS lên R2
             const r2Url = await uploadHLSFolderToR2(`./temp/${baseName}`, baseName);
-
+            // Xoá thư mục tạm
+            fs.rmdirSync(`./temp/${baseName}`, { recursive: true });
             // Metadata
             // const track = await newtrack(baseName, r2Url);
             
