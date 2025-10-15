@@ -9,21 +9,10 @@ router.get('/:id', TrackController.getTrack);
 
 router.get(/^\/(.+\.m3u8)$/, TrackController.handleM3u8);
 
-<<<<<<< Updated upstream
-router.get('/:id', (req, res) => {
-    // Lấy danh sách bài hát
-    res.send('Get tracks endpoint');
-});
-=======
+router.get(/^\/(.+\.ts)$/, TrackController.handleTs);
+
 // Để tam để test
 router.get('/', TrackController.getAllTracks);
-
-router.get('/:id', TrackController.getTrack);
-
-router.get(/^\/(.+\.m3u8)$/, TrackController.handleM3u8);
-
-router.get(/^\/(.+\.ts)$/, TrackController.handleTs);
->>>>>>> Stashed changes
 
 router.get('/:id/lyrics', (req, res) => {
     // Lấy lời bài hát
