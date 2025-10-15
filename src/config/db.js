@@ -22,7 +22,7 @@ const DBSchema = new mongoose.Schema({
 });
 
 DBSchema.methods.greet = function () {
-  return `Hello, ${this.name}!`;
+  return `Hello, ${this.name}!, your email is ${this.email}. You commented on movie ID: ${this.movie_id} at ${this.date}. Comment: ${this.text}`;
 };
 
 // const dbConn = mongoose.connection.useDb("sample_mflix"); ----> Cách 2
