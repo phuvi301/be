@@ -125,3 +125,5 @@ const TrackController = {
         }
     }
 }
+
+export default TrackController
