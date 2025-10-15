@@ -9,12 +9,10 @@ const TrackController = {
         try {
             const { id } = req.params;
             if (!id) return res.status(400).json({ message: "Id is required" });
-            console.log(id)
 
             const track = await getTrackByID(id)
             if (!track) return res.status(404).json({ message: "Track not found" });
             
-
             return res.status(200).json({ message: "Track found", data: track });
         }
         catch (error) {
@@ -33,7 +31,7 @@ const TrackController = {
         const folder = key.replace(/[^/]+$/, ''); // songs/song_name/
         const rewritten = text.replace(
           /([^\n#]+\.ts)/g,
-          (match) => `/api/tracks/songs/${match}`
+          (match) => `/api/tracks/${folder}${match}`
         );
     
         res.setHeader("Content-Type", "application/vnd.apple.mpegurl");

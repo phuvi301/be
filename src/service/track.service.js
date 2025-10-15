@@ -74,11 +74,16 @@ export const uploadHLSFolderToR2 = async (folderPath, baseName) => {
   };
 };
 
-export const newtrack = async (baseName, uploadedFolderInfo) => {
+export const newtrack = async (
+  title, artist, genre, 
+  duration, audioUrl, thumbnailUrl,
+  owner, playCount, likeCount, commentCount,
+  comments, status, tags, lyrics) =>
+{
   return await Track.create({
-    title: baseName,
-    hlsUrl: uploadedFolderInfo.m3u8Url,
-    folderKey: uploadedFolderInfo.folderKey,
-    uploadedAt: new Date(),
+    title: title, artist: artist, genre: genre,
+    duration: duration, audioUrl: audioUrl, thumbnailUrl: thumbnailUrl,
+    owner: owner, playCount: playCount, likeCount: likeCount, commentCount: commentCount,
+    comments: comments, status: status, tags: tags, lyrics: lyrics,
   });
 };

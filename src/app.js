@@ -1,13 +1,9 @@
 import express from "express";
 import "dotenv/config";
-// import dotenv from "dotenv";
 import db from "./config/db.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-
 import routes from "./routes/index.js";
-
-// dotenv.config();
 
 // Kết nối DB trước khi khởi động server
 await db.connectDB();
