@@ -1,10 +1,10 @@
 import Track from '../models/Track.js';
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { spawn } from "child_process";
 import client from '../utils/r2client.js';
 import fs from "fs";
 import path from "path";
-import { spawn } from "child_process";
 
 const BUCKET = "musichub";
 
@@ -30,15 +30,22 @@ export const convertToHLS = (inputPath, baseName) => {
     // Command ffmpeg: tạo .m3u8 và các .ts segments
     const args = [
       "-i", inputPath,
-      "-codec:", "copy",
-      "-start_number", "0",
+      "-map", "0:a:0", // chỉ lấy track audio đầu tiên
+      "-c:v", "copy", // không xử lý video (nếu có)
+      "-c:a", "aac", // ép chuyển sang AAC, tương thích HLS
+      "-b:a", "128k",
       "-hls_time", "1.5",
       "-hls_list_size", "0",
       "-f", "hls",
       `${outputDir}/${baseName}.m3u8`,
     ];
 
-    const ffmpeg = spawn("ffmpeg", args);
+    const ffmpeg = spawn("ffmpeg", args, { shell: true });
+
+    // Check lỗi ffmpeg
+    // ffmpeg.stderr.on("data", (data) => {
+    //   console.error("ffmpeg error:", data.toString());
+    // });
 
     ffmpeg.on("close", (code) => {
       if (code === 0) resolve(outputDir);

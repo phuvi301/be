@@ -3,6 +3,7 @@ import getTrackByID, { getSignedR2Url, convertToHLS, uploadHLSFolderToR2, newtra
 import fetch from "node-fetch";
 import path from "path";
 import fs from "fs";
+import slugify from "slugify";
 
 const TrackController = {
     // Để tam để test
@@ -67,17 +68,20 @@ const TrackController = {
             if (!req.file) return res.status(400).json({ message: "No file uploaded" });
 
             const { originalname, buffer } = req.file;
-            const baseName = path.parse(originalname).name;
-            const localPath = `./temp/${baseName}/${baseName}.mp3`;
-            
+            const { name } = req.body;
+
+            const baseName = path.parse(name).name;
+            // Chuyển sang tên an toàn (Việt -> không dấu, không space, ...)
+            const safeName = slugify(baseName, { lower: true });
             // Tạo thư mục tạm nếu chưa tồn tại
+            const localPath = `./temp/${safeName}/${safeName}.mp3`;
             fs.mkdirSync(path.dirname(localPath), { recursive: true });
 
             // Lưu tạm file MP3
             fs.writeFileSync(localPath, buffer);
 
             // Chuyển sang HLS (.m3u8 + .ts)
-            await convertToHLS(localPath, baseName);
+            await convertToHLS(localPath, safeName);
 
             // Xoá file MP3 tạm
             fs.rmSync(localPath);
@@ -95,8 +99,12 @@ const TrackController = {
             if (!name) return res.status(400).json({ message: "Name is required" });
             // name = song_name.mp3 => baseName = song_name
             const baseName = name.replace(/\.mp3$/, '');
-            const dir = `./temp/${baseName}`;
-            if (fs.existsSync(dir)) fs.rmdirSync(dir, { recursive: true });
+            // Chuyển sang tên an toàn (Việt -> không dấu, không space, ...)
+            const safeName = slugify(baseName, { lower: true });
+            
+            // Xoá thư mục tạm nếu tồn tại
+            const dir = `./temp/${safeName}`;
+            if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true });
             return res.status(200).json({ message: "Track reset success"});
         } catch (error) {
             return res.status(500).json({ message: "Server error", error: error.message });
@@ -109,13 +117,15 @@ const TrackController = {
             if (!name) return res.status(400).json({ message: "Name is required" });
             // name = song_name.mp3 => baseName = song_name
             const baseName = name.replace(/\.mp3$/, '');
-            const localPath = `./temp/${baseName}/${baseName}.m3u8`;
+            // Chuyển sang tên an toàn (Việt -> không dấu, không space, ...)
+            const safeName = slugify(baseName, { lower: true });
+            const localPath = `./temp/${safeName}/${safeName}.m3u8`;
             if (!fs.existsSync(localPath)) return res.status(404).json({ message: "Track not found" });
 
             // Upload thư mục HLS lên R2
-            const r2Url = await uploadHLSFolderToR2(`./temp/${baseName}`, baseName);
+            const r2Url = await uploadHLSFolderToR2(`./temp/${safeName}`, safeName);
             // Xoá thư mục tạm
-            fs.rmdirSync(`./temp/${baseName}`, { recursive: true });
+            fs.rmSync(`./temp/${baseName}`, { recursive: true });
             // Metadata
             // const track = await newtrack(baseName, r2Url);
             
