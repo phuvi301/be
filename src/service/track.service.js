@@ -77,20 +77,20 @@ export const uploadHLSFolderToR2 = async (folderPath, baseName) => {
 
   return {
     folderKey,
-    m3u8Url: `https://musichub.${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${folderKey}/${baseName}.m3u8`,
+    m3u8Url: `${folderKey}/${baseName}.m3u8`,
   };
 };
 
-export const newtrack = async (
+export const newtrack = (
   title, artist, genre, 
   duration, audioUrl, thumbnailUrl,
   owner, playCount, likeCount, commentCount,
   comments, status, tags, lyrics) =>
 {
-  return await Track.create({
-    title: title, artist: artist, genre: genre,
-    duration: duration, audioUrl: audioUrl, thumbnailUrl: thumbnailUrl,
-    owner: owner, playCount: playCount, likeCount: likeCount, commentCount: commentCount,
-    comments: comments, status: status, tags: tags, lyrics: lyrics,
+  return new Track({
+    title, artist, genre,
+    duration, audioUrl, thumbnailUrl,
+    owner, playCount, likeCount, commentCount,
+    comments, status, tags, lyrics
   });
 };

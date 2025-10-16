@@ -113,22 +113,24 @@ const TrackController = {
 
     uploadTrack: async (req, res) => {
         try {
-            const { name } = req.body;
-            if (!name) return res.status(400).json({ message: "Name is required" });
-            // name = song_name.mp3 => baseName = song_name
-            const baseName = name.replace(/\.mp3$/, '');
+            const { title, artist, genre, thumbnailUrl } = req.body;
+            if (!title) return res.status(400).json({ message: "Title is required" });
+            if (!artist) return res.status(400).json({ message: "Artist is required" });
+
             // Chuyển sang tên an toàn (Việt -> không dấu, không space, ...)
-            const safeName = slugify(baseName, { lower: true });
+            const safeName = slugify(title, { lower: true });
             const localPath = `./temp/${safeName}/${safeName}.m3u8`;
             if (!fs.existsSync(localPath)) return res.status(404).json({ message: "Track not found" });
 
             // Upload thư mục HLS lên R2
             const r2Url = await uploadHLSFolderToR2(`./temp/${safeName}`, safeName);
             // Xoá thư mục tạm
-            fs.rmSync(`./temp/${baseName}`, { recursive: true });
-            // Metadata
-            // const track = await newtrack(baseName, r2Url);
+            fs.rmSync(`./temp/${safeName}`, { recursive: true });
             
+            // Metadata
+            const newTrack = newtrack(title, artist, genre, 0, r2Url.m3u8Url, thumbnailUrl);
+            await newTrack.save();
+
             return res.status(200).json({ message: "Upload success", data: r2Url });
         } catch (error) {
             return res.status(500).json({ message: "Server error", error: error.message });
