@@ -1,5 +1,5 @@
 import Track from '../models/Track.js';
-import getTrackByID, { getSignedR2Url, convertToHLS, uploadHLSFolderToR2, newtrack } from '../service/track.service.js';
+import getTrackByID, { getSignedR2Url, convertToHLS, uploadHLSFolderToR2 } from '../service/track.service.js';
 import fetch from "node-fetch";
 import path from "path";
 import fs from "fs";
@@ -84,7 +84,7 @@ const TrackController = {
             await convertToHLS(localPath, safeName);
 
             // Xoá file MP3 tạm
-            fs.rmSync(localPath);
+            fs.unlinkSync(localPath);
 
             res.status(200).json({ message: "Convert success" });
         } catch (err) {
@@ -128,10 +128,20 @@ const TrackController = {
             fs.rmSync(`./temp/${safeName}`, { recursive: true });
             
             // Metadata
-            const newTrack = newtrack(title, artist, genre, 0, r2Url.m3u8Url, thumbnailUrl);
-            await newTrack.save();
+            const newTrack = new Track(
+                {
+                    title: title,
+                    artist: artist,
+                    genre: genre ? genre : "Unknown",
+                    duration: 0,
+                    audioUrl: r2Url.m3u8Url,
+                    thumbnailUrl: thumbnailUrl ? thumbnailUrl : "",
+                    owner: req.user
+                }
+            );
+            const track = await newTrack.save();
 
-            return res.status(200).json({ message: "Upload success", data: r2Url });
+            return res.status(200).json({ message: "Upload success", data: track });
         } catch (error) {
             return res.status(500).json({ message: "Server error", error: error.message });
         }
