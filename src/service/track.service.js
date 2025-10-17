@@ -80,17 +80,3 @@ export const uploadHLSFolderToR2 = async (folderPath, baseName) => {
     m3u8Url: `${folderKey}/${baseName}.m3u8`,
   };
 };
-
-export const newtrack = (
-  title, artist, genre, 
-  duration, audioUrl, thumbnailUrl,
-  owner, playCount, likeCount, commentCount,
-  comments, status, tags, lyrics) =>
-{
-  return new Track({
-    title, artist, genre,
-    duration, audioUrl, thumbnailUrl,
-    owner, playCount, likeCount, commentCount,
-    comments, status, tags, lyrics
-  });
-};
