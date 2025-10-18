@@ -1,3 +1,7 @@
-import authRoutes from "./auth.js";
+import verifyToken from "./authentication.js";
 
-export default { authRoutes };
+const middlewareController = {
+    verifyToken
+}
+
+export default middlewareController;
