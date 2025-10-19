@@ -66,9 +66,12 @@ const TrackController = {
             const { originalname, buffer } = req.file;
             const { name } = req.body;
 
+            // name = song_name.mp3 => baseName = song_name
             const baseName = path.parse(name).name;
+
             // Chuyển sang tên an toàn (Việt -> không dấu, không space, ...)
             const safeName = slugify(baseName, { lower: true });
+
             // Tạo thư mục tạm nếu chưa tồn tại
             const localPath = `./temp/${safeName}/${safeName}.mp3`;
             fs.mkdirSync(path.dirname(localPath), { recursive: true });
@@ -94,7 +97,7 @@ const TrackController = {
             const { name } = req.body;
             if (!name) return res.status(400).json({ message: "Name is required" });
             // name = song_name.mp3 => baseName = song_name
-            const baseName = name.replace(/\.mp3$/, "");
+            const baseName = path.parse(name).name;
             // Chuyển sang tên an toàn (Việt -> không dấu, không space, ...)
             const safeName = slugify(baseName, { lower: true });
 
@@ -109,17 +112,20 @@ const TrackController = {
 
     uploadTrack: async (req, res) => {
         try {
-            const { title, artist, genre, thumbnailUrl } = req.body;
+            const { title, artist, genre, originalName, thumbnailUrl } = req.body;
             if (!title) return res.status(400).json({ message: "Title is required" });
             if (!artist) return res.status(400).json({ message: "Artist is required" });
 
+            // originalName = song_name.mp3 => baseName = song_name
+            const baseName = path.parse(originalName).name;
             // Chuyển sang tên an toàn (Việt -> không dấu, không space, ...)
-            const safeName = slugify(title, { lower: true });
+            const safeName = slugify(baseName, { lower: true });
             const localPath = `./temp/${safeName}/${safeName}.m3u8`;
             if (!fs.existsSync(localPath)) return res.status(404).json({ message: "Track not found" });
 
             // Upload thư mục HLS lên R2
             const r2Url = await uploadHLSFolderToR2(`./temp/${safeName}`, safeName);
+            
             // Xoá thư mục tạm
             fs.rmSync(`./temp/${safeName}`, { recursive: true });
 
