@@ -5,7 +5,6 @@ const TrackSchema = new mongoose.Schema(
         title: { type: String, required: true },
         artist: { type: String, required: true },
         genre: { type: String },
-        duration: { type: Number, required: true },
         audioUrl: { type: String, required: true, unique: true },
         thumbnailUrl: { type: String },
         owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
