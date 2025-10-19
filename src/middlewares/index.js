@@ -1,7 +1,9 @@
 import verifyToken from "./authentication.js";
+import handleUpload from "./cloudinaryUpload.js";
 
 const middlewareController = {
-    verifyToken
+    verifyToken,
+    ...handleUpload
 }
 
 export default middlewareController;
