@@ -29,6 +29,9 @@ const uploadToCloudinary = async (req, res, next) => {
         // Xoá file tạm
         fs.unlinkSync(file.path);
 
+        // Thông báo thành công
+        console.log("Image uploaded to Cloudinary");
+
         next();
     } catch (err) {
         console.error("Cloudinary upload error:", err);

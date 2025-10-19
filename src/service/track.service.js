@@ -34,7 +34,7 @@ export const convertToHLS = (inputPath, baseName) => {
       "-c:v", "copy", // không xử lý video (nếu có)
       "-c:a", "aac", // ép chuyển sang AAC, tương thích HLS
       "-b:a", "128k",
-      "-hls_time", "1.5",
+      "-hls_time", "3",
       "-hls_list_size", "0",
       "-f", "hls",
       `${outputDir}/${baseName}.m3u8`,

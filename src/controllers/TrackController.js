@@ -125,7 +125,8 @@ const TrackController = {
 
             // Upload thư mục HLS lên R2
             const r2Url = await uploadHLSFolderToR2(`./temp/${safeName}`, safeName);
-            
+            console.log("Uploaded to R2");
+
             // Xoá thư mục tạm
             fs.rmSync(`./temp/${safeName}`, { recursive: true });
 
@@ -140,6 +141,7 @@ const TrackController = {
                 owner: req.user.id,
             });
             const track = await newTrack.save();
+            console.log("Track metadata saved");
 
             return res.status(200).json({ message: "Upload success", data: track });
         } catch (error) {
