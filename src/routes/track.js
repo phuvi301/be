@@ -1,6 +1,8 @@
 import express from 'express';
 import multer from "multer";
 import TrackController from '../controllers/TrackController.js';
+import handleUpload from '../middlewares/cloudinaryUpload.js';
+import middlewareController from '../middlewares/index.js';
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -28,7 +30,7 @@ router.post('/', upload.single('file'), TrackController.handleTrack);
 
 router.post('/reset', TrackController.resetTrack)
 
-router.post('/upload', TrackController.uploadTrack);
+router.post('/upload', middlewareController.verifyToken, middlewareController.upload.single("thumbnail"), middlewareController.uploadToCloudinary, TrackController.uploadTrack);
 
 router.put('/:id', (req, res) => {
     // Cập nhật thông tin bài hát trong danh sách của người dùng

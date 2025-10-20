@@ -36,7 +36,7 @@ const AuthController = {
             const isMatch = await bcrypt.compare(password, user.password);
             if (!isMatch) return res.status(401).json({ message: "Email or password is unpredicted" });
 
-            const accessToken = jwt.sign({ id: user._id }, process.env.JWT_ACCESS_KEY, { expiresIn: "1m" });
+            const accessToken = jwt.sign({ id: user._id }, process.env.JWT_ACCESS_KEY, { expiresIn: "30m" });
             const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_REFRESH_KEY, { expiresIn: "7d" });
 
             const { password: _, ...updateUser } = user._doc;
@@ -74,7 +74,7 @@ const AuthController = {
             jwt.verify(refreshToken, process.env.JWT_REFRESH_KEY, async (err, user) => {
                 if (err || refreshTokenDoc.user !== user.id) return res.status(403).json({ message: "Invalid token" });
                 await RefreshToken.deleteOne({ token: refreshToken });
-                const newAccessToken = jwt.sign({ id: user.id }, process.env.JWT_ACCESS_KEY, { expiresIn: "1m" });
+                const newAccessToken = jwt.sign({ id: user.id }, process.env.JWT_ACCESS_KEY, { expiresIn: "30m" });
                 const newRefreshToken = jwt.sign({ id: user.id }, process.env.JWT_REFRESH_KEY, { expiresIn: "7d" });
                 const newRefreshTokenDoc = new RefreshToken({ token: newRefreshToken, user: user.id });
                 await newRefreshTokenDoc.save();

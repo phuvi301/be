@@ -1,3 +1,9 @@
-import authRoutes from "./auth.js";
+import verifyToken from "./authentication.js";
+import handleUpload from "./cloudinaryUpload.js";
 
-export default { authRoutes };
+const middlewareController = {
+    verifyToken,
+    ...handleUpload
+}
+
+export default middlewareController;

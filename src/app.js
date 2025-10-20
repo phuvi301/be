@@ -13,7 +13,7 @@ const app = express();
 const port = process.env.PORT || 8080;
 
 app.use(cors({
-    origin: '*',
+    origin: 'http://localhost:3000',
     credentials: true,
     methods: 'GET,PUT,POST,DELETE',
     preflightContinue: false,
