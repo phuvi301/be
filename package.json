@@ -17,6 +17,7 @@
     "@aws-sdk/s3-request-presigner": "^3.908.0",
     "axios": "^1.12.2",
     "bcrypt": "^6.0.0",
+    "cli-progress": "^3.12.0",
     "cloudinary": "^2.7.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -26,6 +27,7 @@
     "mongoose": "^8.19.1",
     "multer": "^2.0.2",
     "node-fetch": "^3.3.2",
+    "p-limit": "^7.2.0",
     "slugify": "^1.6.6"
   },
   "devDependencies": {
