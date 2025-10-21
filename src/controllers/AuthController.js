@@ -3,6 +3,9 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import RefreshToken from "../models/RefreshToken.js";
 
+const ACCESS_TOKEN_EXPIRES_TIME = 15 * 60 * 1000; // 15m
+const REFRESH_TOKEN_EXPIRES_TIME = 1 * 24 * 60 * 60 * 1000; // 1d
+
 const AuthController = {
     register: async (req, res) => {
         try {
@@ -36,20 +39,28 @@ const AuthController = {
             const isMatch = await bcrypt.compare(password, user.password);
             if (!isMatch) return res.status(401).json({ message: "Email or password is unpredicted" });
 
-            const accessToken = jwt.sign({ id: user._id }, process.env.JWT_ACCESS_KEY, { expiresIn: "30m" });
-            const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_REFRESH_KEY, { expiresIn: "7d" });
+            const accessToken = jwt.sign({ id: user._id }, process.env.JWT_ACCESS_KEY, {
+                expiresIn: ACCESS_TOKEN_EXPIRES_TIME,
+            });
+            const refreshToken = jwt.sign({ id: user._id }, process.env.JWT_REFRESH_KEY, {
+                expiresIn: REFRESH_TOKEN_EXPIRES_TIME,
+            });
 
             const { password: _, ...updateUser } = user._doc;
 
-            const newRefreshToken = new RefreshToken({ token: refreshToken, user: user._id });
+            const newRefreshToken = new RefreshToken({
+                token: refreshToken,
+                user: user._id,
+                expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRES_TIME),
+            });
             await newRefreshToken.save();
 
             res.cookie("refreshToken", refreshToken, {
                 httpOnly: true,
                 secure: false,
                 path: "/",
-                sameSite: "strict",
-                maxAge: 7 * 24 * 60 * 60 * 1000,
+                sameSite: "none",
+                maxAge: REFRESH_TOKEN_EXPIRES_TIME,
             });
 
             res.status(200).json({ message: "Signed in successfully", data: { ...updateUser, accessToken } });
@@ -59,6 +70,9 @@ const AuthController = {
     },
     signout: async (req, res) => {
         try {
+            const token = req.cookies?.refreshToken;
+            if (!token) res.status(401).json({ message: "Unauthorized" });
+            await RefreshToken.deleteOne({ token });
             res.clearCookie("refreshToken");
             res.status(200).json({ message: "Signed out successfully" });
         } catch (error) {
@@ -74,16 +88,24 @@ const AuthController = {
             jwt.verify(refreshToken, process.env.JWT_REFRESH_KEY, async (err, user) => {
                 if (err || refreshTokenDoc.user !== user.id) return res.status(403).json({ message: "Invalid token" });
                 await RefreshToken.deleteOne({ token: refreshToken });
-                const newAccessToken = jwt.sign({ id: user.id }, process.env.JWT_ACCESS_KEY, { expiresIn: "30m" });
-                const newRefreshToken = jwt.sign({ id: user.id }, process.env.JWT_REFRESH_KEY, { expiresIn: "7d" });
-                const newRefreshTokenDoc = new RefreshToken({ token: newRefreshToken, user: user.id });
+                const newAccessToken = jwt.sign({ id: user.id }, process.env.JWT_ACCESS_KEY, {
+                    expiresIn: ACCESS_TOKEN_EXPIRES_TIME,
+                });
+                const newRefreshToken = jwt.sign({ id: user.id }, process.env.JWT_REFRESH_KEY, {
+                    expiresIn: REFRESH_TOKEN_EXPIRES_TIME,
+                });
+                const newRefreshTokenDoc = new RefreshToken({
+                    token: newRefreshToken,
+                    user: user.id,
+                    expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRES_TIME),
+                });
                 await newRefreshTokenDoc.save();
                 res.cookie("refreshToken", newRefreshToken, {
                     httpOnly: true,
                     secure: false,
                     path: "/",
-                    sameSite: "strict",
-                    maxAge: 7 * 24 * 60 * 60 * 1000,
+                    sameSite: "none",
+                    maxAge: REFRESH_TOKEN_EXPIRES_TIME,
                 });
                 res.status(200).json({ message: "Refresh successfully", data: { accessToken: newAccessToken } });
             });

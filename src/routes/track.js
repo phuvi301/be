@@ -1,7 +1,6 @@
 import express from 'express';
 import multer from "multer";
 import TrackController from '../controllers/TrackController.js';
-import handleUpload from '../middlewares/cloudinaryUpload.js';
 import middlewareController from '../middlewares/index.js';
 
 const router = express.Router();
