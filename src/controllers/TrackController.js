@@ -16,6 +16,7 @@ const TrackController = {
         }
     },
 
+    // Lấy track theo id
     getTrack: async (req, res) => {
         try {
             const { id } = req.params;
@@ -30,6 +31,7 @@ const TrackController = {
         }
     },
 
+    // Xử lí file .m3u8
     handleM3u8: async (req, res) => {
         try {
             const key = req.params[0]; // songs/song_name/song_name.m3u8
@@ -49,6 +51,7 @@ const TrackController = {
         }
     },
 
+    // Xử lí file .ts
     handleTs: async (req, res) => {
         const key = req.params[0];
         const signedUrl = await getSignedR2Url(key);
@@ -57,6 +60,16 @@ const TrackController = {
 
         res.setHeader("Content-Type", response.headers.get("content-type") || "video/MP2T");
         response.body.pipe(res);
+    },
+
+    // Lấy danh sách 10 bài hát mới thêm gần đây
+    addedRecently: async (req, res) => {
+        try {
+            const recentTracks = await Track.find({}).sort({createdAt: -1}).limit(10);
+            res.status(200).json({data: recentTracks});
+        } catch (err){
+            res.status(500).json({ message: "Server error", error: err.message })
+        }
     },
 
     handleTrack: async (req, res) => {
