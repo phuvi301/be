@@ -5,6 +5,8 @@ import { spawn } from "child_process";
 import client from '../utils/r2client.js';
 import fs from "fs";
 import path from "path";
+import pLimit from "p-limit";
+import cliProgress from "cli-progress";
 
 const BUCKET = "musichub";
 
@@ -57,23 +59,50 @@ export const convertToHLS = (inputPath, baseName) => {
 export const uploadHLSFolderToR2 = async (folderPath, baseName) => {
   const files = fs.readdirSync(folderPath);
   const folderKey = `songs/${baseName}`;
+  const limit = pLimit(10); // Giới hạn 10 upload đồng thời
 
-  for (const file of files) {
-    const filePath = path.join(folderPath, file);
-    const fileBuffer = fs.readFileSync(filePath);
-    const mimeType = file.endsWith(".m3u8")
-      ? "application/vnd.apple.mpegurl"
-      : "video/MP2T";
+  const total = files.length;
+  // Tạo progress bar
+  const bar = new cliProgress.SingleBar(
+    {
+      format:
+        "Uploading [{bar}] {percentage}% | {value}/{total} files | ETA: {eta_formatted}",
+      barCompleteChar: "█",
+      barIncompleteChar: "-",
+      hideCursor: true,
+    },
+    cliProgress.Presets.shades_classic
+  );
 
-    const command = new PutObjectCommand({
-      Bucket: "musichub",
-      Key: `${folderKey}/${file}`,
-      Body: fileBuffer,
-      ContentType: mimeType,
-    });
+  bar.start(total, 0);
+  const startTime = Date.now();
 
-    await client.send(command);
-  }
+  const uploadPromises = files.map((file) =>
+    limit(async () => {
+      const filePath = path.join(folderPath, file);
+      const fileBuffer = fs.readFileSync(filePath);
+      const mimeType = file.endsWith(".m3u8")
+        ? "application/vnd.apple.mpegurl"
+        : "video/MP2T";
+
+      const command = new PutObjectCommand({
+        Bucket: "musichub",
+        Key: `${folderKey}/${file}`,
+        Body: fileBuffer,
+        ContentType: mimeType,
+      });
+
+      await client.send(command);
+
+      bar.increment(); // ✅ Cập nhật progress
+    })
+  );
+
+  await Promise.all(uploadPromises);
+  bar.stop();
+
+  const totalTime = ((Date.now() - startTime) / 1000).toFixed(2);
+  console.log(`🎉 All uploads completed in ${totalTime}s`);
 
   return {
     folderKey,
