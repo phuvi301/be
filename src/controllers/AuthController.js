@@ -71,7 +71,7 @@ const AuthController = {
     signout: async (req, res) => {
         try {
             const token = req.cookies?.refreshToken;
-            if (!token) res.status(401).json({ message: "Unauthorized" });
+            if (!token) return res.status(401).json({ message: "Unauthorized" });
             await RefreshToken.deleteOne({ token });
             res.clearCookie("refreshToken");
             res.status(200).json({ message: "Signed out successfully" });
