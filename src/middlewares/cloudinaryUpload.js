@@ -15,7 +15,7 @@ const upload = multer({ dest: "temp/" });
 const uploadToCloudinary = async (req, res, next) => {
     try {
         const file = req.file;
-        if (!file) return next();
+        if (!file) return res.status(400).json({ message: "No file uploaded" });
 
         // Upload lên Cloudinary
         const result = await cloudinary.uploader.upload(file.path, {
