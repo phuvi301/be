@@ -59,7 +59,7 @@ const AuthController = {
                 httpOnly: true,
                 secure: false,
                 path: "/",
-                sameSite: "none",
+                sameSite: "strict",
                 maxAge: REFRESH_TOKEN_EXPIRES_TIME,
             });
 
@@ -104,7 +104,7 @@ const AuthController = {
                     httpOnly: true,
                     secure: false,
                     path: "/",
-                    sameSite: "none",
+                    sameSite: "strict",
                     maxAge: REFRESH_TOKEN_EXPIRES_TIME,
                 });
                 res.status(200).json({ message: "Refresh successfully", data: { accessToken: newAccessToken } });
