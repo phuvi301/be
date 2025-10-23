@@ -6,9 +6,11 @@ import middlewareController from '../middlewares/index.js';
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.get('/recent', TrackController.addedRecently);
+router.get('/display', TrackController.homepageDisplay);
 
 router.get('/:id', TrackController.getTrack);
+
+router.post('/:id/playCount', TrackController.increasePlayCount);
 
 router.get(/^\/(.+\.m3u8)$/, TrackController.handleM3u8);
 

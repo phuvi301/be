@@ -4,6 +4,7 @@ import fetch from "node-fetch";
 import path from "path";
 import fs from "fs";
 import slugify from "slugify";
+import { error } from "console";
 
 const TrackController = {
     // Để tam để test
@@ -62,13 +63,24 @@ const TrackController = {
         response.body.pipe(res);
     },
 
-    // Lấy danh sách 10 bài hát mới thêm gần đây
-    addedRecently: async (req, res) => {
+    // Lấy danh sách bài hát để hiển thị
+    homepageDisplay: async (req, res) => {
         try {
-            const recentTracks = await Track.find({}).sort({createdAt: -1}).limit(10);
-            res.status(200).json({data: recentTracks});
+            const recentTracks = await Track.find({}).sort({createdAt: -1}).limit(10); // 10 bài được thêm vào gần đây nhất
+            const mostPlayedTracks = await Track.find({}).sort({playCount: -1, createdAt: -1}).limit(10); // 10 bài có lượt playCount nhiều nhất
+            res.status(200).json({recent: recentTracks, mostPlayed: mostPlayedTracks});
         } catch (err){
-            res.status(500).json({ message: "Server error", error: err.message })
+            res.status(500).json({ message: "Server error", error: err.message });
+        }
+    },
+
+    // Tăng lượt nghe
+    increasePlayCount: async (req, res) => {
+        try {
+            await Track.findByIdAndUpdate(req.params.id, { $inc: { playCount: 1 } });
+            res.status(200).json({ message: `Song with id(${req.params.id}) get 1 playCount` });
+        } catch(err) {
+            res.status(500).json({ message: "Server error", error: err.message });
         }
     },
 
