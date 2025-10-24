@@ -21,4 +21,7 @@ const TrackSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
+TrackSchema.index({createdAt: -1});
+TrackSchema.index({playCount: -1, createdAt: -1});
+
 export default mongoose.model("Track", TrackSchema);

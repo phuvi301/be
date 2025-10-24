@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+// import Track from "../models/Track.js";
 
 const connectDB = async () => {
     try {
@@ -6,6 +7,11 @@ const connectDB = async () => {
             dbName: 'MusicHub'
         });
         console.log("MongoDB connected");
+        // const result = await Track.syncIndexes();
+        // console.log('Indexes synced:', result);
+
+        // const indexes = await Track.listIndexes();
+        // console.log('Current indexes:', indexes);
     } catch (error) {
         console.error("MongoDB connection failed:", error);
         process.exit(1);
