@@ -140,6 +140,7 @@ const TrackController = {
             const { title, artist, genre, originalName, thumbnailUrl } = req.body;
             if (!title) return res.status(400).json({ message: "Title is required" });
             if (!artist) return res.status(400).json({ message: "Artist is required" });
+            if (!thumbnailUrl) return res.status(400).json({ message: "Thumbnail is required" }); // Thêm cho chắc ăn
 
             // originalName = song_name.mp3 => baseName = song_name
             const baseName = path.parse(originalName).name;
