@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import RefreshToken from "../models/RefreshToken.js";
 
-const ACCESS_TOKEN_EXPIRES_TIME = 30 * 1000; // 15m
+const ACCESS_TOKEN_EXPIRES_TIME = 15 * 60 * 1000; // 15m
 const REFRESH_TOKEN_EXPIRES_TIME = 1 * 24 * 60 * 60 * 1000; // 1d
 
 const AuthController = {
