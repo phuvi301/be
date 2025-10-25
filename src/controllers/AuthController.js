@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import RefreshToken from "../models/RefreshToken.js";
 
-const ACCESS_TOKEN_EXPIRES_TIME = 15 * 60 * 1000; // 15m
+const ACCESS_TOKEN_EXPIRES_TIME = 30 * 1000; // 15m
 const REFRESH_TOKEN_EXPIRES_TIME = 1 * 24 * 60 * 60 * 1000; // 1d
 
 const AuthController = {
@@ -63,7 +63,7 @@ const AuthController = {
                 maxAge: REFRESH_TOKEN_EXPIRES_TIME,
             });
 
-            res.status(200).json({ message: "Signed in successfully", data: { ...updateUser, accessToken } });
+            res.status(200).json({ message: "Signed in successfully", data: { ...updateUser, accessToken, accessExpireTime: Date.now() + ACCESS_TOKEN_EXPIRES_TIME } });
         } catch (error) {
             res.status(500).json({ message: "Server error", error: error.message });
         }
@@ -86,7 +86,7 @@ const AuthController = {
             const refreshTokenDoc = await RefreshToken.findOne({ token: refreshToken });
             if (!refreshTokenDoc) return res.status(401).json({ message: "Unauthenticated" });
             jwt.verify(refreshToken, process.env.JWT_REFRESH_KEY, async (err, user) => {
-                if (err || refreshTokenDoc.user !== user.id) return res.status(403).json({ message: "Invalid token" });
+                if (err) return res.status(403).json({ message: "Invalid token" });
                 await RefreshToken.deleteOne({ token: refreshToken });
                 const newAccessToken = jwt.sign({ id: user.id }, process.env.JWT_ACCESS_KEY, {
                     expiresIn: ACCESS_TOKEN_EXPIRES_TIME,
@@ -107,7 +107,7 @@ const AuthController = {
                     sameSite: "strict",
                     maxAge: REFRESH_TOKEN_EXPIRES_TIME,
                 });
-                res.status(200).json({ message: "Refresh successfully", data: { accessToken: newAccessToken } });
+                res.status(200).json({ message: "Refresh successfully", data: { accessToken: newAccessToken, accessExpireTime: Date.now() + ACCESS_TOKEN_EXPIRES_TIME } });
             });
         } catch (error) {
             res.status(500).json({ message: "Server error", error: error.message });
