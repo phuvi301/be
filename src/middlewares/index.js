@@ -1,5 +1,5 @@
 import verifyToken from "./authentication.js";
-import handleUpload from "./cloudinaryUpload.js";
+import handleUpload from "./cloudinary.js";
 
 const middlewareController = {
     verifyToken,

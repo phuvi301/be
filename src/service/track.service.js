@@ -1,5 +1,5 @@
 import Track from '../models/Track.js';
-import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { GetObjectCommand, PutObjectCommand, ListObjectsV2Command, DeleteObjectsCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { spawn } from "child_process";
 import client from '../utils/r2client.js';
@@ -102,10 +102,38 @@ export const uploadHLSFolderToR2 = async (folderPath, baseName) => {
   bar.stop();
 
   const totalTime = ((Date.now() - startTime) / 1000).toFixed(2);
-  console.log(`🎉 All uploads completed in ${totalTime}s`);
+  console.log(`🎉 Đã upload thành công trong ${totalTime}s`);
 
   return {
     folderKey,
     m3u8Url: `${folderKey}/${baseName}.m3u8`,
   };
+};
+
+export const deleteFolder = async (folderPath) => {
+  // folderPath ví dụ: "songs/myfolder/"
+  const listCmd = new ListObjectsV2Command({
+    Bucket: BUCKET,
+    Prefix: folderPath,
+  });
+
+  const listedObjects = await client.send(listCmd);
+
+  if (!listedObjects.Contents || listedObjects.Contents.length === 0) {
+    console.log("Folder trống hoặc không tồn tại");
+    return;
+  }
+
+  const deleteParams = {
+    Bucket: BUCKET,
+    Delete: {
+      Objects: listedObjects.Contents.map((obj) => ({ Key: obj.Key })),
+      Quiet: false,
+    },
+  };
+
+  const deleteCmd = new DeleteObjectsCommand(deleteParams);
+  await client.send(deleteCmd);
+
+  console.log(`Đã xóa xong folder: ${folderPath}`);
 };
