@@ -40,9 +40,6 @@ router.put('/:id', (req, res) => {
     res.send('Update user track in list endpoint');
 });
 
-router.delete('/:id', (req, res) => {
-    // Xoá bài hát khỏi danh sách của người dùng
-    res.send('Delete user track from list endpoint');
-});
+router.delete('/:id', middlewareController.verifyToken, middlewareController.deleteImageFromCloudinary, TrackController.deleteTrack);
 
 export default router;

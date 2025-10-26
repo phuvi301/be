@@ -1,10 +1,10 @@
 import express from 'express';
+import SearchController from '../controllers/SearchController.js';
+
 
 const router = express.Router();
 
-router.get('/', (req, res) => {
-    // Xử lý tìm kiếm
-    res.send('Search endpoint');
-});
+router.get('/', SearchController.searchTracks);     
+
 
 export default router;

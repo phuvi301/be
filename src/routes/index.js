@@ -8,7 +8,7 @@ import commentRoutes from "./comments.js";
 const routes = {
     auth: authRoutes,
     tracks: trackRoutes,
-    searchs: searchRoutes,
+    search: searchRoutes,
     playlists: playlistRoutes,
     users: userRoutes,
     comments: commentRoutes,

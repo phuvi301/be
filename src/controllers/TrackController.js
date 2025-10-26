@@ -1,5 +1,5 @@
 import Track from "../models/Track.js";
-import getTrackByID, { getSignedR2Url, convertToHLS, uploadHLSFolderToR2 } from "../service/track.service.js";
+import getTrackByID, { getSignedR2Url, convertToHLS, uploadHLSFolderToR2, deleteFolder } from "../service/track.service.js";
 import fetch from "node-fetch";
 import path from "path";
 import fs from "fs";
@@ -170,6 +170,28 @@ const TrackController = {
             console.log("Track metadata saved");
 
             return res.status(200).json({ message: "Upload success", data: track });
+        } catch (error) {
+            return res.status(500).json({ message: "Server error", error: error.message });
+        }
+    },
+
+    deleteTrack: async (req, res) => {
+        try {
+            const { id } = req.params;
+
+            const track = await getTrackByID(id);
+            if (!track) return res.status(404).json({ message: "Track not found" });
+
+            const pathName = track.audioUrl.split("/")[0] + '/' + track.audioUrl.split("/")[1] + '/'; // Lấy "song_name" từ audioUrl
+
+            // Xoá folder chứa file HLS trên R2
+            await deleteFolder(pathName);
+
+            // Xoá track trong database
+            await Track.findByIdAndDelete(id);
+            console.log("Đã xóa track khỏi database");
+
+            return res.status(200).json({ message: "Track deleted successfully", data: track });
         } catch (error) {
             return res.status(500).json({ message: "Server error", error: error.message });
         }
