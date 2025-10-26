@@ -7,4 +7,6 @@ router.get('/:id', UserController.getUser);
 
 router.put('/:id', UserController.updateUser);
 
+router.post('/history/:id', UserController.addTrackToHis);
+
 export default router;

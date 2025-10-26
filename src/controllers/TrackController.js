@@ -1,10 +1,10 @@
 import Track from "../models/Track.js";
-import getTrackByID, { getSignedR2Url, convertToHLS, uploadHLSFolderToR2, deleteFolder } from "../service/track.service.js";
+import mongoService, { getSignedR2Url, convertToHLS, uploadHLSFolderToR2, deleteFolder } from "../service/track.service.js";
 import fetch from "node-fetch";
 import path from "path";
 import fs from "fs";
 import slugify from "slugify";
-import { error } from "console";
+import { getHistory } from "../service/redisService.js";
 
 const TrackController = {
     // Để tam để test
@@ -23,7 +23,7 @@ const TrackController = {
             const { id } = req.params;
             if (!id) return res.status(400).json({ message: "Id is required" });
 
-            const track = await getTrackByID(id);
+            const track = await mongoService.getTrackByID(id);
             if (!track) return res.status(404).json({ message: "Track not found" });
 
             return res.status(200).json({ message: "Track found", data: track });
@@ -66,10 +66,19 @@ const TrackController = {
     // Lấy danh sách bài hát để hiển thị
     homepageDisplay: async (req, res) => {
         try {
-            const recentTracks = await Track.find({}).sort({createdAt: -1}).limit(10); // 10 bài được thêm vào gần đây nhất
-            const mostPlayedTracks = await Track.find({}).sort({playCount: -1, createdAt: -1}).limit(10); // 10 bài có lượt playCount nhiều nhất
-            res.status(200).json({recent: recentTracks, mostPlayed: mostPlayedTracks});
-        } catch (err){
+            const id = req.user?.id; 
+            let history = [];
+            
+            const recentTracks = await Track.find({}).sort({createdAt: -1}).limit(15); // 15 bài được thêm vào gần đây nhất
+            const mostPlayedTracks = await Track.find({}).sort({playCount: -1, createdAt: -1}).limit(15); // 15 bài có lượt playCount nhiều nhất
+            
+            if (id) {
+                const historyList = await getHistory(id);
+                history = await mongoService.getTrackByListID(historyList); // 15 bài nghe gần đây nếu có đăng nhập
+            }
+            
+            res.status(200).json({ recent: recentTracks, mostPlayed: mostPlayedTracks, listened: history, isAuthenticated: !!id});
+        } catch (err) {
             res.status(500).json({ message: "Server error", error: err.message });
         }
     },
