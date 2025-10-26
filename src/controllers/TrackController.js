@@ -1,4 +1,5 @@
 import Track from "../models/Track.js";
+import User from "../models/User.js";
 import mongoService, { getSignedR2Url, convertToHLS, uploadHLSFolderToR2, deleteFolder } from "../service/track.service.js";
 import fetch from "node-fetch";
 import path from "path";
@@ -178,6 +179,10 @@ const TrackController = {
             const track = await newTrack.save();
             console.log("Track metadata saved");
 
+            // Cập nhật danh sách bài hát của user
+            await User.findByIdAndUpdate(req.user.id, { $push: { tracks: track._id } });
+            console.log("User's track list updated");
+
             return res.status(200).json({ message: "Upload success", data: track });
         } catch (error) {
             return res.status(500).json({ message: "Server error", error: error.message });
@@ -199,6 +204,10 @@ const TrackController = {
             // Xoá track trong database
             await Track.findByIdAndDelete(id);
             console.log("Đã xóa track khỏi database");
+
+            // Cập nhật danh sách bài hát của user
+            await User.findByIdAndUpdate(req.user.id, { $pull: { tracks: id } });
+            console.log("User's track list updated");
 
             return res.status(200).json({ message: "Track deleted successfully", data: track });
         } catch (error) {

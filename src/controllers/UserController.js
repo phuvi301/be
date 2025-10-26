@@ -1,4 +1,6 @@
 import User from "../models/User.js";
+import Track from "../models/Track.js";
+import Playlist from "../models/Playlists.js";
 import addToHistory from "../service/redisService.js";
 
 const UserController = {
@@ -32,9 +34,9 @@ const UserController = {
                     path: "likedTracks",
                 });
             await user.populate(populateOptions);
-            res.status(200).json({ message: "Fetch user successfully", data: UserController.filterPassword(user) });
+            return res.status(200).json({ message: "Fetch user successfully", data: UserController.filterPassword(user) });
         } catch (error) {
-            res.status(500).json({ message: "Server error", error });
+            return res.status(500).json({ message: "Server error", error });
         }
     },
     updateUser: async (req, res) => {
@@ -45,9 +47,9 @@ const UserController = {
             const user = await User.findById(req.params.id);
             if (!user) return res.status(404).json({ message: "User not found" });
             await user.updateOne({ nickname, bio, country });
-            res.status(200).json({ message: "Update successfully", data: UserController.filterPassword(user) });
+            return res.status(200).json({ message: "Update successfully", data: UserController.filterPassword(user) });
         } catch (error) {
-            res.status(500).json({ message: "Server error", error });
+            return res.status(500).json({ message: "Server error", error });
         }
     },
     updateThumbnail: async (req, res) => {
@@ -67,9 +69,9 @@ const UserController = {
             const emailVerify = await User.findOne({ email });
             if (emailVerify) return res.status(403).json({ message: "Email has been used" });
             await user.updateOne({ email });
-            res.status(200).json({ message: "Update successfully", data: UserController.filterPassword(user) });
+            return res.status(200).json({ message: "Update successfully", data: UserController.filterPassword(user) });
         } catch (error) {
-            res.status(500).json({ message: "Server error", error });
+            return res.status(500).json({ message: "Server error", error });
         }
     },
 
@@ -78,11 +80,41 @@ const UserController = {
         try {
             const {trackID} = req.body;
             await addToHistory(req.params.id, trackID);
-            res.status(200).json({message: `Track with id ${trackID} has been added to history`});
+            return res.status(200).json({message: `Track with id ${trackID} has been added to history`});
         } catch(err) {
-            res.status(500).json({message: "Server error", err});
+            return res.status(500).json({message: "Server error", err});
         }
-    }
+    },
+
+    // Lấy danh sách bài hát đã tải lên của người dùng
+    getUploadedTracks: async (req, res) => {
+        try {
+            const { ids } = req.body;
+            if (!ids) return res.status(400).json({ message: "No song IDs provided" });
+            
+            // Truy vấn tất cả bài hát có id trong danh sách
+            const tracks = await Track.find({ _id: { $in: ids } });
+            return res.status(200).json({ message: "Fetch uploaded tracks successfully", data: tracks });
+        } catch (error) {
+            console.error("Error fetching tracks:", error);
+            return res.status(500).json({ message: "Internal server error" });
+        }
+    },
+
+    // Lấy danh sách playlist đã tạo của người dùng
+    getUploadedPlaylists: async (req, res) => {
+        try {
+            const { ids } = req.body;
+            if (!ids) return res.status(400).json({ message: "No playlist IDs provided" });
+            
+            // Truy vấn tất cả playlist có id trong danh sách
+            const playlists = await Playlist.find({ _id: { $in: ids } });
+            return res.status(200).json({ message: "Fetch uploaded playlists successfully", data: playlists });
+        } catch (error) {
+            return res.status(500).json({ message: "Server error", error });
+        }
+    },
+
 };
 
 export default UserController;
