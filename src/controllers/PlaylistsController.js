@@ -54,7 +54,7 @@ const PlaylistsController = {
             const playlist = await Playlists.findById(req.params.id);
             if (!playlist) return res.status(404).json({ message: "Playlist not found" });
 
-            const track = Track.findById(trackId);
+            const track = await Track.findById(trackId);
             if (!track) return res.status(404).json({ message: "Track not found" });
             if (track.status === "private") return res.status(403).json({ message: "Permission deny" });
 
