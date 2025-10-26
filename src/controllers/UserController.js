@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import addToHistory from "../service/redisService.js";
 
 const UserController = {
     isOwner: (reqId, acpId) => reqId && reqId === acpId,
@@ -71,6 +72,17 @@ const UserController = {
             res.status(500).json({ message: "Server error", error });
         }
     },
+
+    // Thêm bài hát vào mục "Đã nghe gần đây"
+    addTrackToHis: async (req, res) => {
+        try {
+            const {trackID} = req.body;
+            await addToHistory(req.params.id, trackID);
+            res.status(200).json({message: `Track with id ${trackID} has been added to history`});
+        } catch(err) {
+            res.status(500).json({message: "Server error", err});
+        }
+    }
 };
 
 export default UserController;

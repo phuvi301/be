@@ -1,8 +1,8 @@
-import verifyToken from "./authentication.js";
+import handleAuthentication from "./authentication.js";
 import handleUpload from "./cloudinary.js";
 
 const middlewareController = {
-    verifyToken,
+    ...handleAuthentication,
     ...handleUpload
 }
 

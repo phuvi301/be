@@ -6,7 +6,7 @@ import middlewareController from '../middlewares/index.js';
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.get('/display', TrackController.homepageDisplay);
+router.get('/display', middlewareController.checkLogin, TrackController.homepageDisplay);
 
 router.get('/:id', TrackController.getTrack);
 
