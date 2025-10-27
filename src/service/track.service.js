@@ -7,13 +7,26 @@ import fs from "fs";
 import path from "path";
 import pLimit from "p-limit";
 import cliProgress from "cli-progress";
+import mongoose from 'mongoose';
 
 const BUCKET = "musichub";
 
-export default function getTrackByID(songID) {
-    const track = Track.findById(songID);
-    return track
+const getTrackByID = async (trackID) => {
+  return await Track.findById(trackID);
 }
+
+const getTrackByListID = async (listID) => { 
+  const tracks = await Track.find({ 
+    _id: { $in: listID.map(id => new mongoose.Types.ObjectId(id)) } 
+  });
+  
+  // Sắp xếp lại theo thứ tự listID
+  return listID.map(id => 
+    tracks.find(track => track._id.toString() === id)
+  ).filter(Boolean);
+}
+
+export default {getTrackByID, getTrackByListID}
 
 export async function getSignedR2Url(key) {
   const command = new GetObjectCommand({
