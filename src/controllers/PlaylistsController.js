@@ -40,7 +40,7 @@ const PlaylistsController = {
             
             if (!playlist) return res.status(404).json({ message: "Playlist not found" });
             
-            res.status(200).json(playlist);
+            res.status(200).json({ message: "Fetch playlist successfully", data: playlist});
         } catch (error) {
             res.status(500).json({ message: "Server error", error: error.message });
         }
@@ -163,6 +163,8 @@ const PlaylistsController = {
 
             if (!playlist.tracks.includes(trackId)) playlist.tracks.push(trackId);
             await playlist.save();
+            await playlist.populate("owner", "username nickname avatar")
+            await playlist.populate("tracks");
             res.status(200).json({ message: "Updated successfully", data: playlist });
         } catch (error) {
             res.status(500).json({ message: "Server error", error: error.message });
@@ -178,6 +180,8 @@ const PlaylistsController = {
 
             playlist.tracks = playlist.tracks.filter((id) => id.toString() !== trackId);
             await playlist.save();
+            await playlist.populate("owner", "username nickname avatar")
+            await playlist.populate("tracks");
             res.status(200).json({ message: "Updated successfully", data: playlist });
         } catch (error) {
             res.status(500).json({ message: "Server error", error: error.message });
