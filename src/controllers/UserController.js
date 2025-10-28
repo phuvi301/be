@@ -14,27 +14,32 @@ const UserController = {
             const { tracks: isTracksRequired, playlists: isPlaylistsRequired, likes: isLikeTracksRequired } = req.query;
             const isOwner = UserController.isOwner(req.user?.id, user._id);
             if (!isOwner) user.likedTracks = [];
-            const populateOptions = isTracksRequired
-                ? [
-                      {
-                          path: "tracks",
-                          match: isOwner ? {} : { status: "public" },
-                      },
-                  ]
-                : [] + isPlaylistsRequired
-                ? [
-                      {
-                          path: "playlists",
-                          match: isOwner ? {} : { status: "public" },
-                      },
-                  ]
-                : [];
+            const populateOptions = [
+                ...(isTracksRequired
+                    ? [
+                          {
+                              path: "tracks",
+                              match: isOwner ? {} : { status: "public" },
+                          },
+                      ]
+                    : []),
+                ...(isPlaylistsRequired
+                    ? [
+                          {
+                              path: "playlists",
+                              match: isOwner ? {} : { status: "public" },
+                          },
+                      ]
+                    : []),
+            ];
             if (isLikeTracksRequired && isOwner)
                 populateOptions.push({
                     path: "likedTracks",
                 });
             await user.populate(populateOptions);
-            return res.status(200).json({ message: "Fetch user successfully", data: UserController.filterPassword(user) });
+            return res
+                .status(200)
+                .json({ message: "Fetch user successfully", data: UserController.filterPassword(user._doc) });
         } catch (error) {
             return res.status(500).json({ message: "Server error", error });
         }
@@ -47,14 +52,15 @@ const UserController = {
             const user = await User.findById(req.params.id);
             if (!user) return res.status(404).json({ message: "User not found" });
             await user.updateOne({ nickname, bio, country });
-            return res.status(200).json({ message: "Update successfully", data: UserController.filterPassword(user) });
+            return res
+                .status(200)
+                .json({ message: "Update successfully", data: UserController.filterPassword(user._doc) });
         } catch (error) {
             return res.status(500).json({ message: "Server error", error });
         }
     },
     updateThumbnail: async (req, res) => {
         try {
-            
         } catch (error) {
             res.status(500).json({ message: "Server error", error });
         }
@@ -69,7 +75,9 @@ const UserController = {
             const emailVerify = await User.findOne({ email });
             if (emailVerify) return res.status(403).json({ message: "Email has been used" });
             await user.updateOne({ email });
-            return res.status(200).json({ message: "Update successfully", data: UserController.filterPassword(user) });
+            return res
+                .status(200)
+                .json({ message: "Update successfully", data: UserController.filterPassword(user._doc) });
         } catch (error) {
             return res.status(500).json({ message: "Server error", error });
         }
@@ -78,11 +86,11 @@ const UserController = {
     // Thêm bài hát vào mục "Đã nghe gần đây"
     addTrackToHis: async (req, res) => {
         try {
-            const {trackID} = req.body;
+            const { trackID } = req.body;
             await addToHistory(req.params.id, trackID);
-            return res.status(200).json({message: `Track with id ${trackID} has been added to history`});
-        } catch(err) {
-            return res.status(500).json({message: "Server error", err});
+            return res.status(200).json({ message: `Track with id ${trackID} has been added to history` });
+        } catch (err) {
+            return res.status(500).json({ message: "Server error", err });
         }
     },
 
@@ -91,7 +99,7 @@ const UserController = {
         try {
             const { ids } = req.body;
             if (!ids) return res.status(400).json({ message: "No song IDs provided" });
-            
+
             // Truy vấn tất cả bài hát có id trong danh sách
             const tracks = await Track.find({ _id: { $in: ids } });
             return res.status(200).json({ message: "Fetch uploaded tracks successfully", data: tracks });
@@ -106,7 +114,7 @@ const UserController = {
         try {
             const { ids } = req.body;
             if (!ids) return res.status(400).json({ message: "No playlist IDs provided" });
-            
+
             // Truy vấn tất cả playlist có id trong danh sách
             const playlists = await Playlist.find({ _id: { $in: ids } });
             return res.status(200).json({ message: "Fetch uploaded playlists successfully", data: playlists });
@@ -114,7 +122,6 @@ const UserController = {
             return res.status(500).json({ message: "Server error", error });
         }
     },
-
 };
 
 export default UserController;
