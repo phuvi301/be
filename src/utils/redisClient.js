@@ -1,7 +1,6 @@
-import dotenv from "dotenv";
+import "dotenv/config";
 import Redis from "ioredis"
 
-dotenv.config();
 
 const redis = new Redis(`rediss://default:${process.env.REDIS_KEY}@neat-eagle-11072.upstash.io:6379`);
 redis.on("connect", () => console.log("✅ Redis connected"));

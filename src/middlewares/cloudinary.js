@@ -2,8 +2,7 @@ import Track from "../models/Track.js";
 import multer from "multer";
 import fs from "fs";
 import { v2 as cloudinary } from "cloudinary";
-import dotenv from "dotenv";
-dotenv.config();
+import "dotenv/config";
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,

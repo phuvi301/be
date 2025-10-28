@@ -6,7 +6,7 @@ const connectDB = async () => {
         await mongoose.connect(process.env.MONGO_URI, {
             dbName: "MusicHub",
         });
-        console.log("MongoDB connected");
+        console.log("✅ MongoDB connected");
         // const result = await Track.syncIndexes();
         // console.log('Indexes synced:', result);
 

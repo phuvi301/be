@@ -181,7 +181,7 @@ const TrackController = {
 
             // Cập nhật danh sách bài hát của user
             await User.findByIdAndUpdate(req.user.id, { $push: { tracks: track._id } });
-            console.log("User's track list updated");
+            console.log("Added track to user's track list");
 
             return res.status(200).json({ message: "Upload success", data: track });
         } catch (error) {
@@ -193,7 +193,7 @@ const TrackController = {
         try {
             const { id } = req.params;
 
-            const track = await getTrackByID(id);
+            const track = await Track.findById(id);
             if (!track) return res.status(404).json({ message: "Track not found" });
 
             const pathName = track.audioUrl.split("/")[0] + '/' + track.audioUrl.split("/")[1] + '/'; // Lấy "song_name" từ audioUrl
@@ -203,11 +203,11 @@ const TrackController = {
 
             // Xoá track trong database
             await Track.findByIdAndDelete(id);
-            console.log("Đã xóa track khỏi database");
+            console.log("Deleted track from database");
 
             // Cập nhật danh sách bài hát của user
             await User.findByIdAndUpdate(req.user.id, { $pull: { tracks: id } });
-            console.log("User's track list updated");
+            console.log("Deleted track from user's track list");
 
             return res.status(200).json({ message: "Track deleted successfully", data: track });
         } catch (error) {
