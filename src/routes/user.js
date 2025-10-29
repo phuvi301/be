@@ -9,4 +9,10 @@ router.put('/:id', UserController.updateUser);
 
 router.post('/history/:id', UserController.addTrackToHis);
 
+router.post('/progress/:id', UserController.addTrackToCurr);
+
+router.get('/progress/:id', UserController.getProgress);
+
+router.post('/playback/:id', UserController.udtPlaybackTime)
+
 export default router;

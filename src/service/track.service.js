@@ -1,7 +1,7 @@
 import Track from '../models/Track.js';
 import { GetObjectCommand, PutObjectCommand, ListObjectsV2Command, DeleteObjectsCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { spawn } from "child_process";
+import { execSync, spawn } from "child_process";
 import client from '../utils/r2client.js';
 import fs from "fs";
 import path from "path";
@@ -42,6 +42,13 @@ export const convertToHLS = (inputPath, baseName) => {
     const outputDir = `./temp/${baseName}`;
     if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
 
+    // Lấy duration trước bằng ffprobe
+    const duration = parseFloat(
+      execSync(
+        `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${inputPath}"`
+      ).toString().trim()
+    );
+
     // Command ffmpeg: tạo .m3u8 và các .ts segments
     const args = [
       "-i", inputPath,
@@ -63,7 +70,7 @@ export const convertToHLS = (inputPath, baseName) => {
     // });
 
     ffmpeg.on("close", (code) => {
-      if (code === 0) resolve(outputDir);
+      if (code === 0) resolve({outputDir, duration});
       else reject(new Error(`ffmpeg exited with code ${code}`));
     });
   });

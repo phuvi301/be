@@ -115,10 +115,17 @@ const TrackController = {
             fs.writeFileSync(localPath, buffer);
 
             // Chuyển sang HLS (.m3u8 + .ts)
-            await convertToHLS(localPath, safeName);
-
+            const result = await convertToHLS(localPath, safeName);
             // Xoá file MP3 tạm
             fs.unlinkSync(localPath);
+
+            res.cookie("duration", result.duration, {
+                httpOnly: true,
+                secure: false,
+                path: "/",
+                sameSite: "strict",
+                maxAge: 15 * 60 * 1000,
+            });
 
             res.status(200).json({ message: "Convert success" });
         } catch (err) {
@@ -147,10 +154,11 @@ const TrackController = {
 
     uploadTrack: async (req, res) => {
         try {
-            const { title, artist, genre, originalName, thumbnailUrl } = req.body;
+            const { title, artist, genre = "Unknown", originalName, thumbnailUrl } = req.body;
+            const duration = req.cookies?.duration;
             if (!title) return res.status(400).json({ message: "Title is required" });
             if (!artist) return res.status(400).json({ message: "Artist is required" });
-            if (!thumbnailUrl) return res.status(400).json({ message: "Thumbnail is required" }); // Thêm cho chắc ăn
+            if (!duration) return res.status(400).json({ message: "Duration is required" });
 
             // originalName = song_name.mp3 => baseName = song_name
             const baseName = path.parse(originalName).name;
@@ -168,20 +176,22 @@ const TrackController = {
 
             // Metadata
             const newTrack = new Track({
-                title: title,
-                artist: artist,
-                genre: genre ? genre : "Unknown",
-                duration: 0,
+                title,
+                artist,
+                genre,
+                duration,
                 audioUrl: r2Url.m3u8Url,
-                thumbnailUrl: thumbnailUrl ? thumbnailUrl : "",
+                thumbnailUrl,
                 owner: req.user.id,
             });
+
             const track = await newTrack.save();
             console.log("Track metadata saved");
-
+            
             // Cập nhật danh sách bài hát của user
             await User.findByIdAndUpdate(req.user.id, { $push: { tracks: track._id } });
             console.log("Added track to user's track list");
+            res.clearCookie("duration");
 
             return res.status(200).json({ message: "Upload success", data: track });
         } catch (error) {
