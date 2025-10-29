@@ -125,35 +125,6 @@ const UserController = {
             return res.status(500).json({message: "Server error", err});
         }
     },
-
-    // Lấy danh sách bài hát đã tải lên của người dùng
-    getUploadedTracks: async (req, res) => {
-        try {
-            const { ids } = req.body;
-            if (!ids) return res.status(400).json({ message: "No song IDs provided" });
-            
-            // Truy vấn tất cả bài hát có id trong danh sách
-            const tracks = await Track.find({ _id: { $in: ids } });
-            return res.status(200).json({ message: "Fetch uploaded tracks successfully", data: tracks });
-        } catch (error) {
-            console.error("Error fetching tracks:", error);
-            return res.status(500).json({ message: "Internal server error" });
-        }
-    },
-
-    // Lấy danh sách playlist đã tạo của người dùng
-    getUploadedPlaylists: async (req, res) => {
-        try {
-            const { ids } = req.body;
-            if (!ids) return res.status(400).json({ message: "No playlist IDs provided" });
-            
-            // Truy vấn tất cả playlist có id trong danh sách
-            const playlists = await Playlist.find({ _id: { $in: ids } });
-            return res.status(200).json({ message: "Fetch uploaded playlists successfully", data: playlists });
-        } catch (error) {
-            return res.status(500).json({ message: "Server error", error });
-        }
-    },
 };
 
 export default UserController;

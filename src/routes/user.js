@@ -15,8 +15,4 @@ router.get('/progress/:id', UserController.getProgress);
 
 router.post('/playback/:id', UserController.udtPlaybackTime)
 
-router.post('/tracks', UserController.getUploadedTracks);
-
-router.post('/playlists', UserController.getUploadedPlaylists);
-
 export default router;
