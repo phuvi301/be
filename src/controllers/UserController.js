@@ -1,7 +1,7 @@
 import User from "../models/User.js";
 import Track from "../models/Track.js";
 import Playlist from "../models/Playlists.js";
-import addToHistory from "../service/redisService.js";
+import redisService from "../service/redisService.js";
 
 const UserController = {
     isOwner: (reqId, acpId) => reqId && reqId === acpId,
@@ -86,11 +86,72 @@ const UserController = {
     // Thêm bài hát vào mục "Đã nghe gần đây"
     addTrackToHis: async (req, res) => {
         try {
-            const { trackID } = req.body;
-            await addToHistory(req.params.id, trackID);
-            return res.status(200).json({ message: `Track with id ${trackID} has been added to history` });
+            const {trackID} = req.body;
+            await redisService.addToHistory(req.params.id, trackID);
+            return res.status(200).json({message: `Track with id ${trackID} has been added to history`});
+        } catch(err) {
+            return res.status(500).json({message: "Server error", err});
+        }
+    },
+
+    // Lưu tiến trình đang nghe
+    addTrackToCurr: async (req, res) => {
+        try {
+            const {trackID, playbackTime, playlistID, index} = req.body;
+            await redisService.addToCurrent(req.params.id, trackID, playbackTime, playlistID, index);
+            return res.status(200).json({message: "Save progress successfully"});
+        } catch(err) {
+            return res.status(500).json({message: "Server error", err});
+        }
+    },
+
+    // Lấy tiến trình đang nghe
+    getProgress: async (req, res) => {
+        try {
+            const progress = await redisService.getPlaybackState(req.params.id);
+            return res.status(200).json({prog: progress});
         } catch (err) {
-            return res.status(500).json({ message: "Server error", err });
+            return res.status(500).json({ message: "Server error", error: err.message });
+        }
+    },
+
+    // Cập nhật playbackTime
+    udtPlaybackTime: async (req, res) => {
+        try {
+            const {playbackTime} = req.body;
+            await redisService.updatePlaybackTime(req.params.id, playbackTime);
+            return res.status(200).json({message: "Update playbackTime succesfully"})
+        } catch(err) {
+            return res.status(500).json({message: "Server error", err});
+        }
+    },
+
+    // Lấy danh sách bài hát đã tải lên của người dùng
+    getUploadedTracks: async (req, res) => {
+        try {
+            const { ids } = req.body;
+            if (!ids) return res.status(400).json({ message: "No song IDs provided" });
+            
+            // Truy vấn tất cả bài hát có id trong danh sách
+            const tracks = await Track.find({ _id: { $in: ids } });
+            return res.status(200).json({ message: "Fetch uploaded tracks successfully", data: tracks });
+        } catch (error) {
+            console.error("Error fetching tracks:", error);
+            return res.status(500).json({ message: "Internal server error" });
+        }
+    },
+
+    // Lấy danh sách playlist đã tạo của người dùng
+    getUploadedPlaylists: async (req, res) => {
+        try {
+            const { ids } = req.body;
+            if (!ids) return res.status(400).json({ message: "No playlist IDs provided" });
+            
+            // Truy vấn tất cả playlist có id trong danh sách
+            const playlists = await Playlist.find({ _id: { $in: ids } });
+            return res.status(200).json({ message: "Fetch uploaded playlists successfully", data: playlists });
+        } catch (error) {
+            return res.status(500).json({ message: "Server error", error });
         }
     },
 };
