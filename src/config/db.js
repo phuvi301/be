@@ -14,7 +14,8 @@ const connectDB = async () => {
         // console.log('Current indexes:', indexes);
     } catch (error) {
         console.error("MongoDB connection failed:", error);
-        process.exit(1);
+        // process.exit(1);
+        await connectDB();
     }
 };
 

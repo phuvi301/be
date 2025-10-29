@@ -33,7 +33,7 @@ router.post('/', upload.single('file'), TrackController.handleTrack);
 
 router.post('/reset', TrackController.resetTrack)
 
-router.post('/upload', middlewareController.verifyToken, middlewareController.upload.single("thumbnail"), middlewareController.uploadToCloudinary, TrackController.uploadTrack);
+router.post('/upload', middlewareController.verifyToken, middlewareController.upload.single("thumbnail"), middlewareController.uploadImageToCloudinary, TrackController.uploadTrack);
 
 router.put('/:id', (req, res) => {
     // Cập nhật thông tin bài hát trong danh sách của người dùng

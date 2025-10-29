@@ -20,7 +20,9 @@ const AuthController = {
             const hashedPassword = await bcrypt.hash(password, salt);
 
             const newUser = new User({ username, email, password: hashedPassword });
-            const { password: _, ...user } = await newUser.save();
+            await newUser.save();
+
+            const { password: _, ...user } = newUser._doc;
 
             res.status(200).json({ message: "Registered successfully", data: user });
         } catch (error) {
@@ -63,7 +65,10 @@ const AuthController = {
                 maxAge: REFRESH_TOKEN_EXPIRES_TIME,
             });
 
-            res.status(200).json({ message: "Signed in successfully", data: { ...updateUser, accessToken, accessExpireTime: Date.now() + ACCESS_TOKEN_EXPIRES_TIME } });
+            res.status(200).json({
+                message: "Signed in successfully",
+                data: { ...updateUser, accessToken, accessExpireTime: Date.now() + ACCESS_TOKEN_EXPIRES_TIME },
+            });
         } catch (error) {
             res.status(500).json({ message: "Server error", error: error.message });
         }
@@ -107,7 +112,10 @@ const AuthController = {
                     sameSite: "strict",
                     maxAge: REFRESH_TOKEN_EXPIRES_TIME,
                 });
-                res.status(200).json({ message: "Refresh successfully", data: { accessToken: newAccessToken, accessExpireTime: Date.now() + ACCESS_TOKEN_EXPIRES_TIME } });
+                res.status(200).json({
+                    message: "Refresh successfully",
+                    data: { accessToken: newAccessToken, accessExpireTime: Date.now() + ACCESS_TOKEN_EXPIRES_TIME },
+                });
             });
         } catch (error) {
             res.status(500).json({ message: "Server error", error: error.message });
