@@ -97,8 +97,8 @@ const UserController = {
     // Lưu tiến trình đang nghe
     addTrackToCurr: async (req, res) => {
         try {
-            const {trackID, playbackTime, playlistID, index} = req.body;
-            await redisService.addToCurrent(req.params.id, trackID, playbackTime, playlistID, index);
+            const {trackID, playbackTime, repeat, playlistID, index} = req.body;
+            await redisService.addToCurrent(req.params.id, trackID, playbackTime, repeat, playlistID, index);
             return res.status(200).json({message: "Save progress successfully"});
         } catch(err) {
             return res.status(500).json({message: "Server error", err});
@@ -118,8 +118,8 @@ const UserController = {
     // Cập nhật playbackTime
     udtPlaybackTime: async (req, res) => {
         try {
-            const {playbackTime} = req.body;
-            await redisService.updatePlaybackTime(req.params.id, playbackTime);
+            const {playbackTime, repeat} = req.body;
+            await redisService.updatePlaybackTime(req.params.id, playbackTime, repeat);
             return res.status(200).json({message: "Update playbackTime succesfully"})
         } catch(err) {
             return res.status(500).json({message: "Server error", err});
