@@ -40,25 +40,36 @@ export async function getSignedR2Url(key) {
 export const convertToHLS = (inputPath, baseName) => {
   return new Promise((resolve, reject) => {
     const outputDir = `./temp/${baseName}`;
-    if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+    if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true, encoding: 'utf-8' });
 
-    // Lấy duration trước bằng ffprobe
-    const duration = parseFloat(
-      execSync(
-        `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${inputPath}"`
-      ).toString().trim()
-    );
+    // --- Lấy metadata từ ffprobe ---
+    const out = execSync(`ffprobe -v quiet -print_format json -show_format -show_streams "${inputPath}"`).toString();
+    const json = JSON.parse(out);
+    const format = json.format || {};
+    const duration = format.duration ? parseFloat(format.duration) : 0;
+    const bitrate = format.bit_rate ? parseInt(format.bit_rate) / 1000 : 0; // kbps
 
-    // Command ffmpeg: tạo .m3u8 và các .ts segments
+    console.log(`🎵 Input Duration: ${duration.toFixed(2)}s | Bitrate: ${bitrate.toFixed(1)} kbps`);
+
+    // --- Xác định bitrate output ---
+    let targetBitrate;
+
+    if (bitrate < 96) targetBitrate = "96k";
+    else if (bitrate <= 192) targetBitrate = `${Math.round(bitrate)}k`; // giữ nguyên bitrate
+    else targetBitrate = "192k"; // giới hạn tối đa (để giảm dung lượng)
+
+    console.log(`⚙️ Output bitrate chọn: ${targetBitrate}`);
+
+    // --- Cấu hình ffmpeg ---
     const args = [
       "-i", inputPath,
-      "-map", "0:a:0", // chỉ lấy track audio đầu tiên
-      "-c:v", "copy", // không xử lý video (nếu có)
-      "-c:a", "aac", // ép chuyển sang AAC, tương thích HLS
-      "-b:a", "128k",
-      "-hls_time", "3",
-      "-hls_list_size", "0",
-      "-f", "hls",
+      "-map", "0:a:0",            // chỉ lấy track audio đầu tiên
+      "-c:v", "copy",             // bỏ qua video
+      "-c:a", "aac",              // encode sang AAC cho HLS
+      "-b:a", targetBitrate,      // bitrate động
+      "-hls_time", "3",           // mỗi segment 3s
+      "-hls_list_size", "0",      // giữ toàn bộ segment
+      "-f", "hls",                // định dạng HLS
       `${outputDir}/${baseName}.m3u8`,
     ];
 

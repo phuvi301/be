@@ -4,7 +4,7 @@ import mongoService, { getSignedR2Url, convertToHLS, uploadHLSFolderToR2, delete
 import fetch from "node-fetch";
 import path from "path";
 import fs from "fs";
-import slugify from "slugify";
+import { slugify } from "transliteration";
 import { getHistory } from "../service/redisService.js";
 
 const TrackController = {
@@ -105,7 +105,7 @@ const TrackController = {
             const baseName = path.parse(name).name;
 
             // Chuyển sang tên an toàn (Việt -> không dấu, không space, ...)
-            const safeName = slugify(baseName, { lower: true });
+            const safeName = slugify(baseName, { trim: true });
 
             // Tạo thư mục tạm nếu chưa tồn tại
             const localPath = `./temp/${safeName}/${safeName}.mp3`;
@@ -141,7 +141,7 @@ const TrackController = {
             // name = song_name.mp3 => baseName = song_name
             const baseName = path.parse(name).name;
             // Chuyển sang tên an toàn (Việt -> không dấu, không space, ...)
-            const safeName = slugify(baseName, { lower: true });
+            const safeName = slugify(baseName, { trim: true });
 
             // Xoá thư mục tạm nếu tồn tại
             const dir = `./temp/${safeName}`;
@@ -163,7 +163,7 @@ const TrackController = {
             // originalName = song_name.mp3 => baseName = song_name
             const baseName = path.parse(originalName).name;
             // Chuyển sang tên an toàn (Việt -> không dấu, không space, ...)
-            const safeName = slugify(baseName, { lower: true });
+            const safeName = slugify(baseName, { trim: true });
             const localPath = `./temp/${safeName}/${safeName}.m3u8`;
             if (!fs.existsSync(localPath)) return res.status(404).json({ message: "Track not found" });
 
