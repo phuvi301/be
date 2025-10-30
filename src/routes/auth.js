@@ -10,4 +10,11 @@ router.post("/signout", AuthController.signout);
 
 router.post("/refresh", AuthController.refresh);
 
+router.post("/google", AuthController.googleAuth);
+router.post("/google-register", AuthController.googleRegister);
+
+router.post("/facebook", AuthController.facebookAuth);
+
+router.get("/oauth-config", AuthController.getOAuthConfig);
+
 export default router;
