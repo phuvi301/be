@@ -4,7 +4,12 @@ const userSchema = new mongoose.Schema(
     {
         username: { type: String, required: true, unique: true },
         email: { type: String, required: true, unique: true },
-        password: { type: String, required: true },
+        password: { 
+            type: String, 
+            required: function() {
+                return !this.googleId && !this.facebookId;
+            }
+        },
         nickname: { type: String },
         avatar: { type: String },
         bio: { type: String },
@@ -14,6 +19,14 @@ const userSchema = new mongoose.Schema(
         likedTracks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Track" }],
         playlists: [{ type: mongoose.Schema.Types.ObjectId, ref: "Playlist" }],
         tracks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Track" }],
+        googleId: { type: String },
+        facebookId: { type: String },
+        isVerified: { type: Boolean, default: false },
+        accountType: { 
+            type: String, 
+            enum: ['manual', 'google', 'facebook', 'hybrid'], 
+            default: 'manual' 
+        },
     },
     { timestamps: true }
 );
