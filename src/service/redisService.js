@@ -7,13 +7,14 @@ const addToHistory = async (userID, trackID) => {
     await redis.expire(`historyOf:${userID}`, 7 * 24 * 60 * 60);
 };
 
-const addToCurrent = async (userID, trackID, playbackTime, playlistID = null, index = null) => {
+const addToCurrent = async (userID, trackID, playbackTime, repeat, playlistID = null, index = null) => {
     try {
         await redis.hmset(`currentOf:${userID}`, {
             trackID: trackID,
             playbackTime: playbackTime,
             playlistID: playlistID,
-            index: index
+            index: index,
+            repeat: repeat
         });
         await redis.expire(`currentOf:${userID}`, 3 * 24 * 60 * 60);
     } catch(err) {
@@ -36,11 +37,12 @@ const getPlaybackState = async (userID) => {
     }
 };
 
-const updatePlaybackTime = async (userID, playbackTime) => {
+const updatePlaybackTime = async (userID, playbackTime, repeat) => {
     try {
         await redis.hmset(
             `currentOf:${userID}`,
-            'playbackTime', playbackTime
+            'playbackTime', playbackTime,
+            'repeat', repeat
         );
     } catch (error) {
         console.error("Error updating playback time:", error);
