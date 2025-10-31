@@ -1,6 +1,6 @@
 import Track from "../models/Track.js";
 import multer from "multer";
-import fs from "fs";
+import fs, { existsSync } from "fs";
 import { v2 as cloudinary } from "cloudinary";
 import "dotenv/config";
 
@@ -13,17 +13,48 @@ cloudinary.config({
 const upload = multer({ dest: "temp/" });
 const FOLDER = "uploads";
 
+const helper = {
+    parsedUrl: (url) => (FOLDER + url.split(`/${FOLDER}`)[1]).replace(/.[^/.]+$/, ""),
+    checkExists: async function (url) {
+        try {
+            await cloudinary.api.resource(this.parsedUrl(url));
+            return true;
+        } catch (error) {
+            return false;
+        }
+    },
+    uploadToCloudinary: async (file) =>
+        cloudinary.uploader.upload(file.path, {
+            folder: FOLDER, // tên folder trong Cloudinary (được tạo tự động nếu chưa có)
+            resource_type: "image",
+        }),
+    deleteFromCloudinary: async function (url) {
+        const MAX_ENTRIES = 3;
+        for (let i = 0; i < MAX_ENTRIES; i++) {
+            try {
+                const result = await cloudinary.uploader.destroy(this.parsedUrl(url));
+                const exist = await this.checkExists(url);
+                if (!exist) {
+                    console.log("Image deleted from Cloudinary");
+                    return result;
+                }
+                console.warn(`[${i}] Delete attempt failed (${result.result}), retrying...`);
+            } catch (error) {
+                console.error(`[${i}] Delete ${this.parsedUrl(url)} attempt error:`, error);
+            }
+            await new Promise((r) => setTimeout(r, 500));
+        }
+        throw new Error(`Failed to delete ${this.parsedUrl(url)} after ${MAX_ENTRIES} attempts`);
+    },
+};
 
-const uploadToCloudinary = async (req, res, next) => {
+const uploadImageToCloudinary = async (req, res, next) => {
     try {
         const file = req.file;
         if (!file) return res.status(400).json({ message: "No file uploaded" });
 
         // Upload lên Cloudinary
-        const result = await cloudinary.uploader.upload(file.path, {
-            folder: FOLDER, // tên folder trong Cloudinary (được tạo tự động nếu chưa có)
-            resource_type: "image",
-        });
+        const result = await helper.uploadToCloudinary(file);
 
         // Lưu link ảnh vào req.body
         req.body.thumbnailUrl = result.secure_url;
@@ -50,20 +81,31 @@ const deleteImageFromCloudinary = async (req, res, next) => {
 
         const secure_url = track.thumbnailUrl;
         if (!secure_url) return res.status(400).json({ message: "No image URL found" });
+        await helper.deleteFromCloudinary(secure_url);
 
-        // Lấy public_id từ secure_url
-        const publicId =  (FOLDER + secure_url.split(`/${FOLDER}`)[1]).replace(/.[^/.]+$/, "");
-
-        // Xoá ảnh khỏi Cloudinary
-        await cloudinary.uploader.destroy(publicId);
-
-        // Thông báo thành công
-        console.log("Image deleted from Cloudinary");
-        
         next();
     } catch (error) {
         console.error("Error deleting image from Cloudinary:", error);
+        res.status(500).json({ message: "Error deleting image from Cloudinary" });
     }
 };
 
-export default { upload, uploadToCloudinary, deleteImageFromCloudinary };
+const handleThumbnailUpdate = async (req, res, next) => {
+    try {
+        const playlist = req.resource;
+        if (playlist.thumbnailUrl) await helper.deleteFromCloudinary(playlist.thumbnailUrl);
+
+        const file = req.file;
+        if (file) {
+            const result = await helper.uploadToCloudinary(file);
+            req.body.thumbnailUrl = result.secure_url;
+            fs.unlinkSync(file.path);
+        } else req.body.thumbnailUrl = "";
+
+        next();
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+export default { upload, uploadImageToCloudinary, deleteImageFromCloudinary, handleThumbnailUpdate };

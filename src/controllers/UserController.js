@@ -41,7 +41,7 @@ const UserController = {
                 .status(200)
                 .json({ message: "Fetch user successfully", data: UserController.filterPassword(user._doc) });
         } catch (error) {
-            return res.status(500).json({ message: "Server error", error });
+            return res.status(500).json({ message: "Server error", error: error.message });
         }
     },
     updateUser: async (req, res) => {
@@ -56,7 +56,7 @@ const UserController = {
                 .status(200)
                 .json({ message: "Update successfully", data: UserController.filterPassword(user._doc) });
         } catch (error) {
-            return res.status(500).json({ message: "Server error", error });
+            return res.status(500).json({ message: "Server error", error: error.message });
         }
     },
     updateThumbnail: async (req, res) => {
@@ -79,7 +79,7 @@ const UserController = {
                 .status(200)
                 .json({ message: "Update successfully", data: UserController.filterPassword(user._doc) });
         } catch (error) {
-            return res.status(500).json({ message: "Server error", error });
+            return res.status(500).json({ message: "Server error", error: error.message });
         }
     },
 
