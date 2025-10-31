@@ -11,29 +11,28 @@ const AuthController = {
     register: async (req, res) => {
         try {
             const { email, password } = req.body;
-            if (!email || !password)
-                return res.status(400).json({ message: "Email and password are required" });
+            if (!email || !password) return res.status(400).json({ message: "Email and password are required" });
 
             const existingUser = await User.findOne({ email });
             if (existingUser) {
                 return res.status(409).json({ message: "Email already exists" });
             }
 
-            let username = email.split('@')[0];
+            let username = email.split("@")[0];
             const existingUsername = await User.findOne({ username });
             if (existingUsername) {
-                username = username + '_' + Date.now();
+                username = username + "_" + Date.now();
             }
 
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
 
-            const newUser = new User({ 
-                username, 
-                email, 
+            const newUser = new User({
+                username,
+                email,
                 password: hashedPassword,
                 isVerified: false,
-                accountType: 'manual'
+                accountType: "manual",
             });
             await newUser.save();
 
@@ -54,7 +53,9 @@ const AuthController = {
             if (!user) return res.status(401).json({ message: "Email or password is incorrect" });
 
             if (!user.password) {
-                return res.status(401).json({ message: "This account was created via social login. Please use Google or Facebook to sign in." });
+                return res.status(401).json({
+                    message: "This account was created via social login. Please use Google or Facebook to sign in.",
+                });
             }
 
             const isMatch = await bcrypt.compare(password, user.password);
@@ -102,24 +103,24 @@ const AuthController = {
             const googleResponse = await axios.get(
                 `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${accessToken}`
             );
-            
+
             const { id, email, name, picture } = googleResponse.data;
-            
+
             if (!email) {
                 return res.status(400).json({ message: "Cannot get email from Google account" });
             }
 
             let user = await User.findOne({ email });
-            
+
             if (!user) {
-                return res.status(404).json({ 
-                    message: "Account not found. Please register first.", 
-                    requireRegistration: true 
+                return res.status(404).json({
+                    message: "Account not found. Please register first.",
+                    requireRegistration: true,
                 });
             } else if (!user.googleId) {
                 user.googleId = id;
                 if (picture && !user.avatar) user.avatar = picture;
-                user.accountType = user.password ? 'hybrid' : 'google';
+                user.accountType = user.password ? "hybrid" : "google";
                 await user.save();
             }
 
@@ -151,10 +152,9 @@ const AuthController = {
                 data: {
                     ...updateUser,
                     accessToken: jwtAccessToken,
-                    accessExpireTime: Date.now() + ACCESS_TOKEN_EXPIRES_TIME
-                }
+                    accessExpireTime: Date.now() + ACCESS_TOKEN_EXPIRES_TIME,
+                },
             });
-
         } catch (error) {
             console.log("Google auth error:", error);
             res.status(500).json({ message: "Google authentication failed", error: error.message });
@@ -170,9 +170,9 @@ const AuthController = {
             const googleResponse = await axios.get(
                 `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${accessToken}`
             );
-            
+
             const { id, email, name, picture } = googleResponse.data;
-            
+
             if (!email) {
                 return res.status(400).json({ message: "Cannot get email from Google account" });
             }
@@ -182,19 +182,19 @@ const AuthController = {
                 return res.status(409).json({ message: "Email already exists. Please sign in instead." });
             }
 
-            let username = name || email.split('@')[0];
+            let username = name || email.split("@")[0];
             const existingUsername = await User.findOne({ username });
             if (existingUsername) {
-                username = username + '_' + Date.now();
+                username = username + "_" + Date.now();
             }
-            
+
             const newUser = new User({
                 username,
                 email,
                 googleId: id,
                 avatar: picture,
                 isVerified: true,
-                accountType: 'google'
+                accountType: "google",
             });
             const user = await newUser.save();
 
@@ -226,10 +226,9 @@ const AuthController = {
                 data: {
                     ...updateUser,
                     accessToken: jwtAccessToken,
-                    accessExpireTime: Date.now() + ACCESS_TOKEN_EXPIRES_TIME
-                }
+                    accessExpireTime: Date.now() + ACCESS_TOKEN_EXPIRES_TIME,
+                },
             });
-
         } catch (error) {
             console.log("Google register error:", error);
             res.status(500).json({ message: "Google registration failed", error: error.message });
@@ -245,9 +244,9 @@ const AuthController = {
             const facebookResponse = await axios.get(
                 `https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${accessToken}`
             );
-            
+
             const { id, email, name, picture } = facebookResponse.data;
-            
+
             if (!email) {
                 return res.status(400).json({ message: "Cannot get email from Facebook account" });
             }
@@ -255,25 +254,25 @@ const AuthController = {
             let user = await User.findOne({ email });
 
             if (!user) {
-                let username = name || email.split('@')[0];
+                let username = name || email.split("@")[0];
                 const existingUsername = await User.findOne({ username });
                 if (existingUsername) {
-                    username = username + '_' + Date.now();
+                    username = username + "_" + Date.now();
                 }
-                
+
                 const newUser = new User({
                     username,
                     email,
                     facebookId: id,
                     avatar: picture?.data?.url,
                     isVerified: true,
-                    accountType: 'facebook'
+                    accountType: "facebook",
                 });
                 user = await newUser.save();
             } else if (!user.facebookId) {
                 user.facebookId = id;
                 if (picture?.data?.url && !user.avatar) user.avatar = picture.data.url;
-                user.accountType = user.password ? 'hybrid' : 'facebook';
+                user.accountType = user.password ? "hybrid" : "facebook";
                 await user.save();
             }
 
@@ -305,11 +304,10 @@ const AuthController = {
                 data: {
                     ...updateUser,
                     accessToken: jwtAccessToken,
-                    accessExpireTime: Date.now() + ACCESS_TOKEN_EXPIRES_TIME
-                }
+                    accessExpireTime: Date.now() + ACCESS_TOKEN_EXPIRES_TIME,
+                },
             });
-
-                } catch (error) {
+        } catch (error) {
             console.log("Facebook auth error:", error);
             res.status(500).json({ message: "Facebook authentication failed", error: error.message });
         }
@@ -318,7 +316,7 @@ const AuthController = {
         try {
             res.status(200).json({
                 googleClientId: process.env.GOOGLE_CLIENT_ID,
-                facebookAppId: process.env.FACEBOOK_APP_ID
+                facebookAppId: process.env.FACEBOOK_APP_ID,
             });
         } catch (error) {
             res.status(500).json({ message: "Failed to get OAuth config", error: error.message });
@@ -331,6 +329,32 @@ const AuthController = {
             await RefreshToken.deleteOne({ token });
             res.clearCookie("refreshToken");
             res.status(200).json({ message: "Signed out successfully" });
+        } catch (error) {
+            res.status(500).json({ message: "Server error", error: error.message });
+        }
+    },
+    changePassword: async (req, res) => {
+        try {
+            const user = await User.findById(req.user.id);
+            if (!user) return res.status(404).json({ message: "Unknown user" });
+
+            if (user.accountType !== "manual" && user.accountType !== "hybrid")
+                return res.status(401).json({ message: "Please contact external service to get support" });
+
+            const { password, newPassword } = req.body;
+            const passwordMatch = await bcrypt.compare(password, user.password);
+            const newpasswordMatch = await bcrypt.compare(newPassword, user.password);
+            if (!passwordMatch) return res.status(403).json({ message: "Something issus, please check again" });
+            if (newpasswordMatch)
+                return res.status(403).json({ message: "New password must not be same an old password" });
+
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+            user.password = hashedPassword;
+            await user.save();
+
+            res.status(200).json({ message: "Password changed" });
         } catch (error) {
             res.status(500).json({ message: "Server error", error: error.message });
         }

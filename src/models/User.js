@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema(
             }
         },
         nickname: { type: String },
-        avatar: { type: String },
+        thumbnailUrl: { type: String },
         bio: { type: String },
         country: { type: String },
         followerCount: { type: Number, default: 0 },

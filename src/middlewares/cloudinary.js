@@ -92,19 +92,23 @@ const deleteImageFromCloudinary = async (req, res, next) => {
 
 const handleThumbnailUpdate = async (req, res, next) => {
     try {
-        const playlist = req.resource;
-        if (playlist.thumbnailUrl) await helper.deleteFromCloudinary(playlist.thumbnailUrl);
+        const resource = req.resource;
+        if (resource.thumbnailUrl) await helper.deleteFromCloudinary(resource.thumbnailUrl);
 
         const file = req.file;
         if (file) {
             const result = await helper.uploadToCloudinary(file);
             req.body.thumbnailUrl = result.secure_url;
             fs.unlinkSync(file.path);
-        } else req.body.thumbnailUrl = "";
+        } else {
+            if (req.body) req.body.thumbnailUrl = "";
+            else req.body = { thumbnailUrl: "" };
+        }
 
         next();
     } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
+        console.log(error);
+        res.status(500).json({ message: "Server cloudinary", error: error.message });
     }
 };
 

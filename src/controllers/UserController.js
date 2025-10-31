@@ -61,8 +61,15 @@ const UserController = {
     },
     updateThumbnail: async (req, res) => {
         try {
+            const user = req.resource;
+            user.thumbnailUrl = req.body.thumbnailUrl;
+            await user.save();
+            res.status(200).json({
+                message: "Update thumbnail successfully",
+                data: UserController.filterPassword(user._doc),
+            });
         } catch (error) {
-            res.status(500).json({ message: "Server error", error });
+            res.status(500).json({ message: "Server error", error: error.message });
         }
     },
     updateSecureInfo: async (req, res) => {
@@ -86,22 +93,22 @@ const UserController = {
     // Thêm bài hát vào mục "Đã nghe gần đây"
     addTrackToHis: async (req, res) => {
         try {
-            const {trackID} = req.body;
+            const { trackID } = req.body;
             await redisService.addToHistory(req.params.id, trackID);
-            return res.status(200).json({message: `Track with id ${trackID} has been added to history`});
-        } catch(err) {
-            return res.status(500).json({message: "Server error", err});
+            return res.status(200).json({ message: `Track with id ${trackID} has been added to history` });
+        } catch (err) {
+            return res.status(500).json({ message: "Server error", err });
         }
     },
 
     // Lưu tiến trình đang nghe
     addTrackToCurr: async (req, res) => {
         try {
-            const {trackID, playbackTime, repeat, playlistID, index} = req.body;
+            const { trackID, playbackTime, repeat, playlistID, index } = req.body;
             await redisService.addToCurrent(req.params.id, trackID, playbackTime, repeat, playlistID, index);
-            return res.status(200).json({message: "Save progress successfully"});
-        } catch(err) {
-            return res.status(500).json({message: "Server error", err});
+            return res.status(200).json({ message: "Save progress successfully" });
+        } catch (err) {
+            return res.status(500).json({ message: "Server error", err });
         }
     },
 
@@ -109,7 +116,7 @@ const UserController = {
     getProgress: async (req, res) => {
         try {
             const progress = await redisService.getPlaybackState(req.params.id);
-            return res.status(200).json({prog: progress});
+            return res.status(200).json({ prog: progress });
         } catch (err) {
             return res.status(500).json({ message: "Server error", error: err.message });
         }
@@ -118,11 +125,11 @@ const UserController = {
     // Cập nhật playbackTime
     udtPlaybackTime: async (req, res) => {
         try {
-            const {playbackTime, repeat} = req.body;
+            const { playbackTime, repeat } = req.body;
             await redisService.updatePlaybackTime(req.params.id, playbackTime, repeat);
-            return res.status(200).json({message: "Update playbackTime succesfully"})
-        } catch(err) {
-            return res.status(500).json({message: "Server error", err});
+            return res.status(200).json({ message: "Update playbackTime succesfully" });
+        } catch (err) {
+            return res.status(500).json({ message: "Server error", err });
         }
     },
 };
