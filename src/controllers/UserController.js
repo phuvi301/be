@@ -46,12 +46,12 @@ const UserController = {
     },
     updateUser: async (req, res) => {
         try {
-            const isOwner = UserController.isOwner(req.user?.id, req.params.id);
-            if (!isOwner) return res.status(403).json({ message: "Permission deny" });
             const { nickname, bio, country } = req.body;
-            const user = await User.findById(req.params.id);
-            if (!user) return res.status(404).json({ message: "User not found" });
-            await user.updateOne({ nickname, bio, country });
+            const user = req.resource;
+            user.nickname = nickname || user.nickname;
+            user.bio = bio || user.bio;
+            user.country = country || user.country;
+            await user.save();
             return res
                 .status(200)
                 .json({ message: "Update successfully", data: UserController.filterPassword(user._doc) });

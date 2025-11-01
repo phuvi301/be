@@ -7,7 +7,12 @@ const router = express.Router();
 
 router.get("/:id", UserController.getUser);
 
-router.put("/:id", UserController.updateUser);
+router.put(
+    "/:id",
+    middlewareController.verifyToken,
+    middlewareController.verifyOwner(User, { field: "_id" }),
+    UserController.updateUser
+);
 router.put(
     "/:id/thumbnail",
     middlewareController.verifyToken,
