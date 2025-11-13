@@ -1,6 +1,7 @@
 import Playlists from "../models/Playlists.js";
 import User from "../models/User.js";
 import Track from "../models/Track.js";
+import { NotificationService } from "./NotificationController.js";
 
 const PlaylistsController = {
     // Lấy thông tin playlist
@@ -79,6 +80,10 @@ const PlaylistsController = {
                         select: "username nickname avatar",
                     },
                 });
+
+            // Tạo thông báo cho followers khi có playlist mới
+            await NotificationService.createNewPlaylistNotification(savedPlaylist._id, userId);
+            console.log("Notification sent to followers for new playlist");
 
             res.status(201).json({ message: "Created successfully", data: populatedPlaylist });
         } catch (error) {
