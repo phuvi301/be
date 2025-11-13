@@ -1,6 +1,7 @@
 import Track from "../models/Track.js";
 import User from "../models/User.js";
 import mongoService, { getSignedR2Url, convertToHLS, uploadHLSFolderToR2, deleteFolder } from "../service/track.service.js";
+import { NotificationService } from "./NotificationController.js";
 import fetch from "node-fetch";
 import path from "path";
 import fs from "fs";
@@ -191,6 +192,11 @@ const TrackController = {
             // Cập nhật danh sách bài hát của user
             await User.findByIdAndUpdate(req.user.id, { $push: { tracks: track._id } });
             console.log("Added track to user's track list");
+            
+            // Tạo thông báo cho followers khi có bài hát mới
+            await NotificationService.createNewTrackNotification(track._id, req.user.id);
+            console.log("Notification sent to followers for new track");
+            
             res.clearCookie("duration");
 
             return res.status(200).json({ message: "Upload success", data: track });
