@@ -25,7 +25,8 @@ const TrackController = {
             const { id } = req.params;
             if (!id) return res.status(400).json({ message: "Id is required" });
 
-            const track = await mongoService.getTrackByID(id);
+            const track = await Track.findById(req.params.id)
+            .populate("owner", "_id nickname username"); // Lấy _id và tên của nghệ sĩ
             if (!track) return res.status(404).json({ message: "Track not found" });
 
             return res.status(200).json({ message: "Track found", data: track });

@@ -30,4 +30,6 @@ router.get("/progress/:id", UserController.getProgress);
 
 router.post("/playback/:id", UserController.udtPlaybackTime);
 
+router.get("/:id/artist-profile", UserController.getArtistProfile);
+
 export default router;
