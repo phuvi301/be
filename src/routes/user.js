@@ -5,7 +5,7 @@ import User from "../models/User.js";
 
 const router = express.Router();
 
-router.get("/:id", UserController.getUser);
+router.get("/:id", middlewareController.checkLogin, UserController.getUser);
 
 router.put(
     "/:id",
@@ -20,6 +20,13 @@ router.put(
     middlewareController.upload.single("thumbnail"),
     middlewareController.handleThumbnailUpdate,
     UserController.updateThumbnail
+);
+
+router.put(
+    "/:id/liked-tracks/:trackId",
+    middlewareController.verifyToken,
+    middlewareController.verifyOwner(User, { field: "_id" }),
+    UserController.updateLikedTrack
 );
 
 router.post("/history/:id", UserController.addTrackToHis);
