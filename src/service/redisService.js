@@ -7,25 +7,26 @@ const addToHistory = async (userID, trackID) => {
     await redis.expire(`historyOf:${userID}`, 7 * 24 * 60 * 60);
 };
 
-const addToCurrent = async (userID, trackID, playbackTime, repeat, playlistID = null, index = null) => {
+const addToCurrent = async (userID, trackID, playbackTime, repeat, shuffle, volume, playlistID = null, index = null) => {
     try {
         await redis.hmset(`currentOf:${userID}`, {
             trackID: trackID,
             playbackTime: playbackTime,
             playlistID: playlistID,
             index: index,
-            repeat: repeat
+            repeat: repeat,
+            shuffle: JSON.stringify(shuffle),
+            volume: volume
         });
         await redis.expire(`currentOf:${userID}`, 3 * 24 * 60 * 60);
     } catch(err) {
         console.error("Error saving playback state to Redis:", err);
     }
-
-}
+};
 
 export const getHistory = async (userID) => {
     return userID ? await redis.lrange(`historyOf:${userID}`, 0, -1) : [];
-}
+};
 
 const getPlaybackState = async (userID) => {
     try {
@@ -37,12 +38,14 @@ const getPlaybackState = async (userID) => {
     }
 };
 
-const updatePlaybackTime = async (userID, playbackTime, repeat) => {
+const updatePlaybackTime = async (userID, playbackTime, repeat, shuffle, volume) => {
     try {
         await redis.hmset(
             `currentOf:${userID}`,
             'playbackTime', playbackTime,
-            'repeat', repeat
+            'repeat', repeat,
+            'shuffle', JSON.stringify(shuffle),
+            'volume', volume
         );
     } catch (error) {
         console.error("Error updating playback time:", error);
