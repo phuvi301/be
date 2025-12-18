@@ -43,9 +43,10 @@ const TrackController = {
             if (!track) return res.status(404).json({ message: "Track not found" });
 
             // Tìm các track khác cùng thể loại hoặc cùng nghệ sĩ, loại trừ track hiện tại
-            // 1. Tách thể loại từ track hiện tại
-            // Thể loại có thể là 1 chuỗi nhiều thể loại, vd: "pop,rock,jazz" tách ra để so sánh và so khớp
+            // 1. Tách thể loại và tên nghệ sĩ từ track hiện tại
+            // Thể loại và tên nghệ sĩ có thể là 1 chuỗi nhiều thể loại, vd: "pop,rock,jazz", "Tăng Duy Tân, Drum7, 2Pillz" tách ra để so sánh và so khớp
             const genreList = track.genre ? track.genre.split(',').map(g => g.trim()).filter(g => g) : [];
+            const artistList = track.artist ? track.artist.split(',').map(a => a.trim()).filter(a => a) : [];
             
             // 2. Tạo Regex Search Pattern
             // Kết quả sẽ là chuỗi dạng: "Pop|Rock|R&B"
@@ -55,6 +56,7 @@ const TrackController = {
             };
 
             const genreRegexPattern = genreList.map(escapeRegex).join('|');
+            const artistRegexPattern = artistList.map(escapeRegex).join('|');
 
             // Tìm các bài liên quan
             let recommendedTracks = await Track.aggregate([
@@ -62,7 +64,7 @@ const TrackController = {
                     $match: {
                         _id: { $ne: track._id }, // Loại trừ bài gốc
                         $or: [
-                            { artist: track.artist },
+                            { artist: { $regex: new RegExp(artistRegexPattern, 'i') } },
                             { genre: { $regex: new RegExp(genreRegexPattern, 'i') } }
                         ]
                     }
@@ -72,7 +74,13 @@ const TrackController = {
                         // Tạo điểm ưu tiên (priorityScore)
                         priorityScore: {
                             $cond: {
-                                if: { $eq: ["$artist", track.artist] }, // Nếu trùng Artist
+                                if: { 
+                                $regexMatch: { 
+                                    input: "$artist", 
+                                    regex: artistRegexPattern, 
+                                    options: "i" 
+                                } 
+                            }, // Nếu trùng Artist
                                 then: 2, // 2 điểm (Cao nhất)
                                 else: 1  // 1 điểm (Trùng Genre)
                             }
