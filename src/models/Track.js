@@ -15,7 +15,11 @@ const TrackSchema = new mongoose.Schema(
         comments: { type: mongoose.Schema.Types.ObjectId, ref: "Comments" },
         status: { type: String, enum: ["public", "private"], default: "public" },
         tags: [{ type: String }],
-        lyrics: { type: mongoose.Schema.Types.ObjectId, ref: "Lyrics" },
+        lyrics: { 
+            type: String, 
+            default: "" // Mặc định là chuỗi rỗng nếu không có lyric
+        },
+        // lyrics: { type: mongoose.Schema.Types.ObjectId, ref: "Lyrics" },
         // bitrate: { type: Number }, // in kbps
         // sampleRate: { type: Number }, // in Hz
     },

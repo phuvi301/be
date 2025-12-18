@@ -13,9 +13,9 @@ const app = express();
 const port = process.env.PORT || 8080;
 
 app.use(cors({
-    origin: 'http://localhost:3000',
-    credentials: true,
-    methods: 'GET,PUT,POST,DELETE',
+    origin: 'http://localhost:3000', // Đổi thành port frontend của bạn nếu khác 3000
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true, // BẮT BUỘC để nhận Cookie từ Frontend
     preflightContinue: false,
     optionsSuccessStatus: 204
 }));

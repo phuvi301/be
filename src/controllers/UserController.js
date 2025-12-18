@@ -154,42 +154,43 @@ const UserController = {
     // Cập nhật playbackTime
     udtPlaybackTime: async (req, res) => {
         try {
-            const { playbackTime, repeat } = req.body;
-            await redisService.updatePlaybackTime(req.params.id, playbackTime, repeat);
+            const { playbackTime, repeat, shuffle, volume } = req.body;
+            await redisService.updatePlaybackTime(req.params.id, playbackTime, repeat, shuffle, volume);
             return res.status(200).json({ message: "Update playbackTime succesfully" });
         } catch (err) {
             return res.status(500).json({ message: "Server error", err });
         }
     },
-
-    getArtistProfile: async (req, res) => {
+    
+    getArtistProfile  : async (req, res) => {
         try {
-            const { id } = req.params;
+        const { id } = req.params;
 
-            // 1. Lấy thông tin nghệ sĩ
-            // Giả sử model User có trường nickname, avatar/thumbnailUrl
-            const artist = await User.findById(id).select("nickname thumbnailUrl email");
+        // 1. Lấy thông tin nghệ sĩ
+        // Giả sử model User có trường nickname, avatar/thumbnailUrl
+        const artist = await User.findById(id).select("nickname thumbnailUrl email"); 
 
-            if (!artist) {
-                return res.status(404).json({ message: "Artist not found" });
-            }
+        if (!artist) {
+            return res.status(404).json({ message: "Artist not found" });
+        }
 
-            // 2. Lấy tất cả bài hát của nghệ sĩ đó (Giả sử Track có trường 'owner' hoặc 'artistId')
-            // Sắp xếp theo lượt nghe giảm dần (để hiển thị bài phổ biến trước)
-            const tracks = await Track.find({ owner: id }).sort({ playCount: -1 });
+        // 2. Lấy tất cả bài hát của nghệ sĩ đó (Giả sử Track có trường 'owner' hoặc 'artistId')
+        // Sắp xếp theo lượt nghe giảm dần (để hiển thị bài phổ biến trước)
+        const tracks = await Track.find({ owner: id }).sort({ playCount: -1 });
 
-            // 3. Tính tổng lượt nghe (Monthly listeners giả lập)
-            const totalPlays = tracks.reduce((sum, track) => sum + (track.playCount || 0), 0);
+        // 3. Tính tổng lượt nghe (Monthly listeners giả lập)
+        const totalPlays = tracks.reduce((sum, track) => sum + (track.playCount || 0), 0);
 
-            res.status(200).json({
-                artist: {
-                    _id: artist._id,
-                    name: artist.nickname || artist.username,
-                    thumbnailUrl: artist.thumbnailUrl,
-                    totalPlays: totalPlays,
-                },
-                tracks: tracks,
-            });
+        res.status(200).json({
+            artist: {
+                _id: artist._id,
+                name: artist.nickname || artist.username,
+                thumbnailUrl: artist.thumbnailUrl,
+                totalPlays: totalPlays
+            },
+            tracks: tracks
+        });
+
         } catch (error) {
             res.status(500).json({ message: "Internal server error", error });
         }
