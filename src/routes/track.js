@@ -12,6 +12,8 @@ router.get('/display', middlewareController.checkLogin, TrackController.homepage
 
 router.get('/:id', TrackController.getTrack);
 
+router.get('/recommend/:id', TrackController.getRecommendedTracks);
+
 router.post('/:id/playCount', TrackController.increasePlayCount);
 
 router.get(/^\/(.+\.m3u8)$/, TrackController.handleM3u8);

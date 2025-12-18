@@ -35,6 +35,77 @@ const TrackController = {
         }
     },
 
+    // Lấy tracks được đề xuất dựa trên thể loại, nghệ sĩ
+    getRecommendedTracks: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const track = await Track.findById(id);
+            if (!track) return res.status(404).json({ message: "Track not found" });
+
+            // Tìm các track khác cùng thể loại hoặc cùng nghệ sĩ, loại trừ track hiện tại
+            // 1. Tách thể loại từ track hiện tại
+            // Thể loại có thể là 1 chuỗi nhiều thể loại, vd: "pop,rock,jazz" tách ra để so sánh và so khớp
+            const genreList = track.genre ? track.genre.split(',').map(g => g.trim()).filter(g => g) : [];
+            
+            // 2. Tạo Regex Search Pattern
+            // Kết quả sẽ là chuỗi dạng: "Pop|Rock|R&B"
+            // Dùng escape để tránh lỗi nếu tên thể loại có ký tự đặc biệt
+            const escapeRegex = (string) => {
+                return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            };
+
+            const genreRegexPattern = genreList.map(escapeRegex).join('|');
+
+            // Tìm các bài liên quan
+            let recommendedTracks = await Track.aggregate([
+                {
+                    $match: {
+                        _id: { $ne: track._id }, // Loại trừ bài gốc
+                        $or: [
+                            { artist: track.artist },
+                            { genre: { $regex: new RegExp(genreRegexPattern, 'i') } }
+                        ]
+                    }
+                },
+                {
+                    $addFields: {
+                        // Tạo điểm ưu tiên (priorityScore)
+                        priorityScore: {
+                            $cond: {
+                                if: { $eq: ["$artist", track.artist] }, // Nếu trùng Artist
+                                then: 2, // 2 điểm (Cao nhất)
+                                else: 1  // 1 điểm (Trùng Genre)
+                            }
+                        }
+                    }
+                },
+                { $sort: { priorityScore: -1 } }, // Sắp xếp điểm cao xuống thấp
+                { $limit: 20 } // Lấy tối đa 20 bài
+            ]);
+
+            // Nếu không đủ 20 bài, lấy thêm các bài khác ngẫu nhiên để bổ sung
+            if (recommendedTracks.length < 20) {
+                const countNeed = 20 - recommendedTracks.length;
+                
+                // Lấy thêm các bài khác ngẫu nhiên (trừ bài gốc và các bài đã tìm thấy)
+                const existingIds = recommendedTracks.map(t => t._id);
+                existingIds.push(id); // Thêm ID bài gốc để loại trừ
+
+                const randomTracks = await Track.aggregate([
+                    { $match: { _id: { $nin: existingIds } } }, // Loại trừ các bài đã có
+                    { $sample: { size: countNeed } } // Lấy ngẫu nhiên
+                ]);
+
+                // Gộp kết quả lại
+                recommendedTracks = [...recommendedTracks, ...randomTracks];
+            }
+
+            return res.status(200).json({ message: "Recommended tracks fetched", data: recommendedTracks });
+        } catch (error) {
+            return res.status(500).json({ message: "Server error", error: error.message });
+        }
+    },
+
     // --- [NEW] API Lấy Lyrics cho Frontend ---
     getTrackLyrics: async (req, res) => {
         try {
