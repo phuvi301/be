@@ -33,7 +33,7 @@ const SearchController = {
                         highlight: { path: ["title", "artist"] }
                     }
                 },  
-                { $limit: 10 }
+                { $limit: 50 }
             ];
 
             const results = await Track.aggregate(pipeline).exec();
