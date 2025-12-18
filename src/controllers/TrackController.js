@@ -25,10 +25,27 @@ const TrackController = {
             const { id } = req.params;
             if (!id) return res.status(400).json({ message: "Id is required" });
 
-            const track = await mongoService.getTrackByID(id);
+            const track = await Track.findById(req.params.id)
+            .populate("owner", "_id nickname username"); // Lấy _id và tên của nghệ sĩ
             if (!track) return res.status(404).json({ message: "Track not found" });
 
             return res.status(200).json({ message: "Track found", data: track });
+        } catch (error) {
+            return res.status(500).json({ message: "Server error", error: error.message });
+        }
+    },
+
+    // --- [NEW] API Lấy Lyrics cho Frontend ---
+    getTrackLyrics: async (req, res) => {
+        try {
+            const { id } = req.params;
+            // Chỉ lấy trường lyrics để tối ưu performance
+            const track = await Track.findById(id).select('lyrics');
+            
+            if (!track) return res.status(404).json({ message: "Track not found" });
+
+            // Trả về đúng format { lyrics: "..." } mà BottomBar.js đang đợi
+            return res.status(200).json({ lyrics: track.lyrics || "" });
         } catch (error) {
             return res.status(500).json({ message: "Server error", error: error.message });
         }
@@ -71,12 +88,12 @@ const TrackController = {
             const id = req.user?.id; 
             let history = [];
             
-            const recentTracks = await Track.find({}).sort({createdAt: -1}).limit(15); // 15 bài được thêm vào gần đây nhất
-            const mostPlayedTracks = await Track.find({}).sort({playCount: -1, createdAt: -1}).limit(15); // 15 bài có lượt playCount nhiều nhất
+            const recentTracks = await Track.find({}).sort({createdAt: -1}).limit(15); 
+            const mostPlayedTracks = await Track.find({}).sort({playCount: -1, createdAt: -1}).limit(15); 
             
             if (id) {
                 const historyList = await getHistory(id);
-                history = await mongoService.getTrackByListID(historyList); // 15 bài nghe gần đây nếu có đăng nhập
+                history = await mongoService.getTrackByListID(historyList); 
             }
             
             res.status(200).json({ recent: recentTracks, mostPlayed: mostPlayedTracks, listened: history, isAuthenticated: !!id});
@@ -95,6 +112,7 @@ const TrackController = {
         }
     },
 
+    // Bước 1: Upload file audio mp3 để convert sang HLS (giữ nguyên)
     handleTrack: async (req, res) => {
         try {
             if (!req.file) return res.status(400).json({ message: "No file uploaded" });
@@ -102,22 +120,15 @@ const TrackController = {
             const { originalname, buffer } = req.file;
             const { name } = req.body;
 
-            // name = song_name.mp3 => baseName = song_name
             const baseName = path.parse(name).name;
-
-            // Chuyển sang tên an toàn (Việt -> không dấu, không space, ...)
             const safeName = slugify(baseName, { trim: true });
 
-            // Tạo thư mục tạm nếu chưa tồn tại
             const localPath = `./temp/${safeName}/${safeName}.mp3`;
             fs.mkdirSync(path.dirname(localPath), { recursive: true });
 
-            // Lưu tạm file MP3
             fs.writeFileSync(localPath, buffer);
 
-            // Chuyển sang HLS (.m3u8 + .ts)
             const result = await convertToHLS(localPath, safeName);
-            // Xoá file MP3 tạm
             fs.unlinkSync(localPath);
 
             res.cookie("duration", result.duration, {
@@ -139,12 +150,10 @@ const TrackController = {
         try {
             const { name } = req.body;
             if (!name) return res.status(400).json({ message: "Name is required" });
-            // name = song_name.mp3 => baseName = song_name
+            
             const baseName = path.parse(name).name;
-            // Chuyển sang tên an toàn (Việt -> không dấu, không space, ...)
             const safeName = slugify(baseName, { trim: true });
 
-            // Xoá thư mục tạm nếu tồn tại
             const dir = `./temp/${safeName}`;
             if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true });
             return res.status(200).json({ message: "Track reset success" });
@@ -153,20 +162,39 @@ const TrackController = {
         }
     },
 
+    // Bước 2: Finalize upload - Lưu metadata, upload R2 và [NEW] Đọc Lyrics
     uploadTrack: async (req, res) => {
         try {
             const { title, artist, genre = "Unknown", originalName, thumbnailUrl } = req.body;
             const duration = req.cookies?.duration;
+            
+            // Xử lý files được gửi lên từ Multer (thumbnail và lyrics)
+            const files = req.files || {}; 
+
             if (!title) return res.status(400).json({ message: "Title is required" });
             if (!artist) return res.status(400).json({ message: "Artist is required" });
             if (!duration) return res.status(400).json({ message: "Duration is required" });
 
-            // originalName = song_name.mp3 => baseName = song_name
+            // --- XỬ LÝ LYRICS ---
+            let lyricsContent = "";
+            if (files['lyrics'] && files['lyrics'][0]) {
+                try {
+                    const lyricFile = files['lyrics'][0];
+                    // Đọc nội dung file .lrc thành string (utf8)
+                    lyricsContent = fs.readFileSync(lyricFile.path, 'utf8');
+                    // Xóa file tạm sau khi đọc xong
+                    fs.unlinkSync(lyricFile.path);
+                } catch (readErr) {
+                    console.error("Error reading lyric file:", readErr);
+                }
+            }
+
+            // Xử lý upload folder HLS (giữ nguyên logic cũ)
             const baseName = path.parse(originalName).name;
-            // Chuyển sang tên an toàn (Việt -> không dấu, không space, ...)
             const safeName = slugify(baseName, { trim: true });
             const localPath = `./temp/${safeName}/${safeName}.m3u8`;
-            if (!fs.existsSync(localPath)) return res.status(404).json({ message: "Track not found" });
+            
+            if (!fs.existsSync(localPath)) return res.status(404).json({ message: "Track not found (HLS missing)" });
 
             // Upload thư mục HLS lên R2
             const r2Url = await uploadHLSFolderToR2(`./temp/${safeName}`, safeName);
@@ -175,32 +203,35 @@ const TrackController = {
             // Xoá thư mục tạm
             fs.rmSync(`./temp/${safeName}`, { recursive: true });
 
-            // Metadata
+            // Tạo Metadata mới
             const newTrack = new Track({
                 title,
                 artist,
                 genre,
                 duration,
                 audioUrl: r2Url.m3u8Url,
-                thumbnailUrl,
+                thumbnailUrl, // Nếu bạn xử lý upload ảnh riêng thì giữ nguyên, nếu upload file ảnh trực tiếp tại đây thì cần xử lý req.files['thumbnail']
                 owner: req.user.id,
+                lyrics: lyricsContent, // Lưu nội dung lyrics vào DB
             });
 
             const track = await newTrack.save();
-            console.log("Track metadata saved");
+            console.log("Track metadata saved with lyrics");
             
             // Cập nhật danh sách bài hát của user
             await User.findByIdAndUpdate(req.user.id, { $push: { tracks: track._id } });
-            console.log("Added track to user's track list");
             
-            // Tạo thông báo cho followers khi có bài hát mới
+            // Tạo thông báo
             await NotificationService.createNewTrackNotification(track._id, req.user.id);
-            console.log("Notification sent to followers for new track");
             
             res.clearCookie("duration");
 
             return res.status(200).json({ message: "Upload success", data: track });
         } catch (error) {
+            // Dọn dẹp file tạm nếu lỗi xảy ra
+            if (req.files?.['lyrics']?.[0]?.path && fs.existsSync(req.files['lyrics'][0].path)) {
+                 fs.unlinkSync(req.files['lyrics'][0].path);
+            }
             return res.status(500).json({ message: "Server error", error: error.message });
         }
     },
@@ -212,7 +243,7 @@ const TrackController = {
             const track = await Track.findById(id);
             if (!track) return res.status(404).json({ message: "Track not found" });
 
-            const pathName = track.audioUrl.split("/")[0] + '/' + track.audioUrl.split("/")[1] + '/'; // Lấy "song_name" từ audioUrl
+            const pathName = track.audioUrl.split("/")[0] + '/' + track.audioUrl.split("/")[1] + '/'; 
 
             // Xoá folder chứa file HLS trên R2
             await deleteFolder(pathName);
@@ -223,7 +254,6 @@ const TrackController = {
 
             // Cập nhật danh sách bài hát của user
             await User.findByIdAndUpdate(req.user.id, { $pull: { tracks: id } });
-            console.log("Deleted track from user's track list");
 
             return res.status(200).json({ message: "Track deleted successfully", data: track });
         } catch (error) {

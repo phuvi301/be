@@ -50,17 +50,20 @@ const helper = {
 
 const uploadImageToCloudinary = async (req, res, next) => {
     try {
-        const file = req.file;
+        // Hỗ trợ cả .single('thumbnail') (req.file) và .fields({thumbnail}) (req.files.thumbnail[0])
+        const file = req.file || (req.files && req.files.thumbnail && req.files.thumbnail[0]) || null;
         if (!file) return res.status(400).json({ message: "No file uploaded" });
 
         // Upload lên Cloudinary
         const result = await helper.uploadToCloudinary(file);
 
-        // Lưu link ảnh vào req.body
+        // Lưu link ảnh vào req.body để controller sử dụng
         req.body.thumbnailUrl = result.secure_url;
 
         // Xoá file tạm
-        fs.unlinkSync(file.path);
+        if (file.path && existsSync(file.path)) {
+            fs.unlinkSync(file.path);
+        }
 
         // Thông báo thành công
         console.log("Image uploaded to Cloudinary");
