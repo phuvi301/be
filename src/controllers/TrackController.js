@@ -7,6 +7,7 @@ import path from "path";
 import fs from "fs";
 import { slugify } from "transliteration";
 import { getHistory } from "../service/redisService.js";
+import redis from "../utils/redisClient.js";
 
 const TrackController = {
     // Để tam để test
@@ -38,6 +39,24 @@ const TrackController = {
     // Lấy tracks được đề xuất dựa trên thể loại, nghệ sĩ
     getRecommendedTracks: async (req, res) => {
         try {
+            const userId = req.user.id; // Lấy ID user từ token
+            const { refresh } = req.query; // Check xem user có muốn ép tạo mới không
+            const redisKey = `recommendation:${userId}`;
+
+            // B1: Kiểm tra cache trong Redis nếu không yêu cầu làm mới
+            if (refresh !== 'true') {
+                const cachedData = await redis.get(redisKey);
+                
+                if (cachedData) {
+                    console.log('Serving from Redis Cache');
+                    return res.status(200).json({
+                        success: true,
+                        data: JSON.parse(cachedData)
+                    });
+                }
+            }
+
+            // B2: Nếu không có trong cache hoặc yêu cầu làm mới, truy vấn từ MongoDB
             const { id } = req.params;
             const track = await Track.findById(id);
             if (!track) return res.status(404).json({ message: "Track not found" });
@@ -58,7 +77,7 @@ const TrackController = {
             const genreRegexPattern = genreList.map(escapeRegex).join('|');
             const artistRegexPattern = artistList.map(escapeRegex).join('|');
 
-            // Tìm các bài liên quan
+            // Query tìm các bài liên quan
             let recommendedTracks = await Track.aggregate([
                 {
                     $match: {
@@ -107,7 +126,10 @@ const TrackController = {
                 // Gộp kết quả lại
                 recommendedTracks = [...recommendedTracks, ...randomTracks];
             }
-
+            // B3: Lưu kết quả vào Redis với thời hạn 24 giờ
+            if (recommendedTracks.length > 0) {
+                await redis.set(redisKey, JSON.stringify(recommendedTracks), 'EX', 86400);
+            }
             return res.status(200).json({ message: "Recommended tracks fetched", data: recommendedTracks });
         } catch (error) {
             return res.status(500).json({ message: "Server error", error: error.message });
