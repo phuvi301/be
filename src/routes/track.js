@@ -12,7 +12,8 @@ router.get('/display', middlewareController.checkLogin, TrackController.homepage
 
 router.get('/:id', TrackController.getTrack);
 
-router.get('/recommend/:id', TrackController.getRecommendedTracks);
+// Đề xuất bài hát liên quan
+router.get('/recommend/:id', middlewareController.verifyToken, TrackController.getRecommendedTracks);
 
 router.post('/:id/playCount', TrackController.increasePlayCount);
 
