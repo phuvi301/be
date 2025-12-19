@@ -29,4 +29,4 @@ try:
     print(json.dumps(data))
 
 except Exception as e:
-    print(f"Python error: {str(e)}", file=sys.stderr)
+    print(json.dumps({ "error": "Track not found"}))
