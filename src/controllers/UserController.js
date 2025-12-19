@@ -162,9 +162,9 @@ const UserController = {
             tracks: tracks
         });
 
-    } catch (error) {
-        res.status(500).json({ message: "Internal server error", error });
-    }
+        } catch (error) {
+            res.status(500).json({ message: "Internal server error", error });
+        }
     },
 };
 
