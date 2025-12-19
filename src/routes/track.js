@@ -12,6 +12,9 @@ router.get('/display', middlewareController.checkLogin, TrackController.homepage
 
 router.get('/:id', TrackController.getTrack);
 
+// Đề xuất bài hát liên quan
+router.get('/recommend/:id', middlewareController.verifyToken, TrackController.getRecommendedTracks);
+
 router.post('/:id/playCount', TrackController.increasePlayCount);
 
 router.get(/^\/(.+\.m3u8)$/, TrackController.handleM3u8);
