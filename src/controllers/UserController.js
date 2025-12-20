@@ -158,8 +158,7 @@ const UserController = {
         const { id } = req.params;
 
         // 1. Lấy thông tin nghệ sĩ
-        // Giả sử model User có trường nickname, avatar/thumbnailUrl
-        const artist = await User.findById(id).select("nickname thumbnailUrl email"); 
+        const artist = await User.findById(id).select("nickname thumbnailUrl email followerCount"); 
 
         if (!artist) {
             return res.status(404).json({ message: "Artist not found" });
@@ -177,7 +176,8 @@ const UserController = {
                 _id: artist._id,
                 name: artist.nickname || artist.username,
                 thumbnailUrl: artist.thumbnailUrl,
-                totalPlays: totalPlays
+                totalPlays: totalPlays,
+                followerCount: artist.followerCount || 0
             },
             tracks: tracks
         });

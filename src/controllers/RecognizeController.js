@@ -19,16 +19,10 @@ const RecognizeController = {
             pythonProcess.stdin.end();
 
             let buffer = "";
-            pythonProcess.stderr.on('data', (err) => {
-                console.error(err.toString());
-            });
-
             pythonProcess.stdout.on("data", d => buffer += d.toString());
 
             pythonProcess.stdout.on("end", () => {
                 const json = JSON.parse(buffer);
-                console.log("Parsed JSON:", json); 
-
                 res.json(json);
             });
         } catch (error) {
