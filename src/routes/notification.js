@@ -6,8 +6,9 @@ const router = express.Router();
 
 router.get("/", authMiddleware.verifyToken, NotificationController.getNotifications);
 router.get("/unread-count", authMiddleware.verifyToken, NotificationController.getUnreadCount);
-router.patch("/:notificationId/read", authMiddleware.verifyToken, NotificationController.markAsRead);
 router.patch("/mark-all-read", authMiddleware.verifyToken, NotificationController.markAllAsRead);
+router.patch("/:notificationId/click", authMiddleware.verifyToken, NotificationController.handleNotificationClick);
+router.patch("/:notificationId/read", authMiddleware.verifyToken, NotificationController.markAsRead);
 router.delete("/:notificationId", authMiddleware.verifyToken, NotificationController.deleteNotification);
 
 export default router;
