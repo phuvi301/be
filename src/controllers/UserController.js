@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import Track from "../models/Track.js";
 import Playlist from "../models/Playlists.js";
 import redisService from "../service/redisService.js";
+import { NotificationService } from "./NotificationController.js";
 
 const UserController = {
     isOwner: (reqId, acpId) => reqId && reqId.toString() === acpId.toString(),
@@ -109,6 +110,8 @@ const UserController = {
             } else {
                 user.likedTracks = [...user.likedTracks, trackInfo._id];
                 await Track.findByIdAndUpdate(req.params.trackId, { $inc: { likeCount: 1 } });
+                
+                await NotificationService.trackLikeNotification(req.params.trackId, user._id, trackInfo.owner);
             }
             
             await user.save();
