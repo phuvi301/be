@@ -155,6 +155,10 @@ const NotificationController = {
                 redirectUrl = `/track/${notification.data.trackId._id}`;
             } else if (notification.type === "new_playlist" && notification.data?.playlistId) {
                 redirectUrl = `/playlist/${notification.data.playlistId._id}`;
+            } else if (notification.type === "new_follow" && notification.data?.followerId) {
+                redirectUrl = `/artist/${userId}`;
+            } else if (notification.type === "track_liked" && notification.data?.trackId) {
+                redirectUrl = `/track/${notification.data.trackId._id}`;
             } else if (notification.data?.directLink) {
                 redirectUrl = notification.data.directLink;
             }
@@ -239,6 +243,59 @@ export const NotificationService = {
             }
         } catch (error) {
             console.error("Error creating playlist notification:", error);
+        }
+    },
+
+    async newFollowNotification(followerId, followingId) {
+        try {
+            const follower = await User.findById(followerId);
+            const following = await User.findById(followingId);
+            
+            if (!follower || !following) return;
+
+            const notification = {
+                recipient: followingId,
+                sender: followerId,
+                type: "new_follow",
+                title: "New follower",
+                message: `${follower.nickname || follower.username} started following you`,
+                data: {
+                    followerId: followerId,
+                    directLink: `/artist/${followingId}`
+                }
+            };
+
+            await Notification.create(notification);
+        } catch (error) {
+            console.error("Error creating follow notification:", error);
+        }
+    },
+
+    async trackLikeNotification(trackId, likerId, trackOwnerId) {
+        try {
+            if (likerId.toString() === trackOwnerId.toString()) return;
+
+            const track = await Track.findById(trackId);
+            const liker = await User.findById(likerId);
+            
+            if (!track || !liker) return;
+
+            const notification = {
+                recipient: trackOwnerId,
+                sender: likerId,
+                type: "track_liked",
+                title: "Someone liked your track",
+                message: `${liker.nickname || liker.username} liked your track "${track.title}"`,
+                data: {
+                    trackId: trackId,
+                    likerId: likerId,
+                    directLink: `/track/${trackId}`
+                }
+            };
+
+            await Notification.create(notification);
+        } catch (error) {
+            console.error("Error creating track like notification:", error);
         }
     }
 };
