@@ -1,2 +1,15 @@
+# 1. Cài đặt các phần mềm cần thiết
 [phases.setup]
 nixPkgs = ['nodejs', 'python3', 'ffmpeg']
+
+# 2. Cài đặt thư viện (Chạy cả npm install và pip install)
+[phases.install]
+cmds = [
+    'npm ci',
+    'python3 -m ensurepip',
+    'python3 -m pip install -r requirements.txt'
+]
+
+# 3. Chạy server
+[start]
+cmd = 'npm start'
