@@ -15,7 +15,7 @@ const port = process.env.PORT || 8080;
 const FRONTEND_URL = process.env.FRONTEND_URL;
 
 app.use(cors({
-    origin: FRONTEND_URL, // Đổi thành port frontend của bạn nếu khác 3000
+    origin: FRONTEND_URL || "http://localhost:3000", // Đổi thành port frontend của bạn nếu khác 3000
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     credentials: true, // BẮT BUỘC để nhận Cookie từ Frontend
     preflightContinue: false,

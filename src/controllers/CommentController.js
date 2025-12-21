@@ -85,7 +85,7 @@ const CommentController = {
             const id = req.body?.id;
             const content = req.body?.content;
             const timeline = req.body?.timeline;
-            if (!id || !content || !timeline) return res.status(404).json({ message: "Missing information" });
+            if (!id || !content || timeline === undefined) return res.status(404).json({ message: "Missing information" });
             const commentBlock = await Comments.findById(id);
             if (!commentBlock) return res.status(404).json({ message: "Comment not found" });
             const newComment = new Comment({
