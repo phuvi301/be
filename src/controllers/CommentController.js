@@ -6,11 +6,12 @@ const CommentController = {
     getCommentContent: async (req, res) => {
         try {
             const { id } = req.params;
+            const currentUserId = req?.user?._id?.toString();
 
             const commentsDoc = await Comments.findById(id).populate({
                 path: "comments.message",
                 model: "Comment",
-                select: "content likeCount timeline owner",
+                select: "content likeCount timeline owner replies likedList",
                 populate: {
                     path: "owner",
                     model: "User",
@@ -30,18 +31,26 @@ const CommentController = {
                     const owner = c.message.owner;
                     const displayName = owner.nickname || owner.username;
 
+                    const isLiked = c.message.likedList
+                        ? c.message.likedList.some((uid) => uid.toString() === currentUserId)
+                        : false;
+
+                    const { likedList, ...messageProps } = c.message;
+
                     return {
                         ...c,
                         message: {
-                            ...c.message,
+                            ...messageProps, // Spread the content, timeline, etc.
                             owner: {
                                 ...owner,
                                 displayName: displayName,
                             },
+                            isLiked: isLiked, // Add the boolean flag
                         },
                     };
                 });
 
+            // The 'likedList' is now gone from the response structure
             res.status(200).json({ message: "Get comment successfully", data: result });
         } catch (error) {
             console.error("Error getting comments:", error);
@@ -67,11 +76,11 @@ const CommentController = {
                 track.comments = savedCommentBlock._id;
                 await track.save();
             } else {
-                const commentBlock = await Comments.findById(id);
-                if (!commentBlock) return res.status(404).json({ message: "Comment not found" });
+                const commentFound = await Comment.findById(id);
+                if (!commentFound) return res.status(404).json({ message: "Comment not found" });
                 const savedCommentBlock = await newCommentBlock.save();
-                commentBlock.replies = savedCommentBlock._id;
-                await commentBlock.save();
+                commentFound.replies = savedCommentBlock._id;
+                await commentFound.save();
             }
             res.status(200).json({ message: "Create comment successfully", data: newCommentBlock });
         } catch (error) {
@@ -85,7 +94,8 @@ const CommentController = {
             const id = req.body?.id;
             const content = req.body?.content;
             const timeline = req.body?.timeline;
-            if (!id || !content || timeline === undefined) return res.status(404).json({ message: "Missing information" });
+            if (!id || !content || timeline === undefined)
+                return res.status(404).json({ message: "Missing information" });
             const commentBlock = await Comments.findById(id);
             if (!commentBlock) return res.status(404).json({ message: "Comment not found" });
             const newComment = new Comment({
@@ -111,10 +121,10 @@ const CommentController = {
             if (!id || !commentId) return res.status(404).json({ message: "Missing information" });
             const commentBlock = await Comments.findById(id);
             if (!commentBlock) return res.status(404).json({ message: "Comment not found" });
-            req.resource.deleteOne();
-            commentBlock.comments = commentBlock.comments.filter((comment) => comment._id.toString() !== commentId);
+            await Comment.findByIdAndDelete(commentId);
+            commentBlock.comments = commentBlock.comments.filter((comment) => comment.message.toString() !== commentId);
             await commentBlock.save();
-            res.status(200).json({ message: "Added comment successfully" });
+            res.status(200).json({ message: "Deleted comment successfully" });
         } catch (error) {
             console.log(error);
             res.status(500).json({ message: "Server error", error: error.message });
@@ -132,7 +142,7 @@ const CommentController = {
                 : [req.user.id, ...comment.likedList];
             comment.likeCount = comment.likedList.length;
             await comment.save();
-            res.status(200).json({ message: "Added comment successfully" });
+            res.status(200).json({ message: "Like comment successfully" });
         } catch (error) {
             console.log(error);
             res.status(500).json({ message: "Server error", error: error.message });

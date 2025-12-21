@@ -7,7 +7,6 @@ const CommentsSchema = new mongoose.Schema(
                 message: { type: mongoose.Schema.Types.ObjectId, ref: "Comment" },
             },
         ],
-        replies: { type: mongoose.Schema.Types.ObjectId, ref: "Comments" },
     },
     { timestamps: true }
 );
@@ -19,10 +18,12 @@ const CommentSchema = new mongoose.Schema(
         likeCount: { type: Number, default: 0 },
         likedList: [
             {
-                type: mongoose.Schema.Types.ObjectId, ref: "User"
-            }
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
         ],
         timeline: { type: Number },
+        replies: { type: mongoose.Schema.Types.ObjectId, ref: "Comments" },
     },
     { timestamps: true }
 );

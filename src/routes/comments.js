@@ -5,7 +5,7 @@ import { Comment } from "../models/Comments.js";
 
 const router = express.Router();
 
-router.get("/:id", CommentController.getCommentContent);
+router.get("/:id", middlewareController.checkLogin, CommentController.getCommentContent);
 
 router.post("/", middlewareController.verifyToken, CommentController.createCommentBlock);
 
