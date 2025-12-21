@@ -1,25 +1,23 @@
 import express from "express";
+import CommentController from "../controllers/CommentController.js";
+import middlewareController from "../middlewares/index.js";
+import { Comment } from "../models/Comments.js";
 
 const router = express.Router();
 
-router.get('/:id', (req, res) => {
-    // Lấy bình luận cho bài hát hoặc playlist
-    res.send('Get comments endpoint');
-});
+router.get("/:id", CommentController.getCommentContent);
 
-router.post('/', (req, res) => {
-    // Thêm bình luận mới
-    res.send('Add comment endpoint');
-});
+router.post("/", middlewareController.verifyToken, CommentController.createCommentBlock);
 
-router.delete('/:id', (req, res) => {
-    // Xoá bình luận
-    res.send('Delete comment endpoint');
-});
+router.post("/comment", middlewareController.verifyToken, CommentController.addNewComment);
 
-router.post('/:id/like', (req, res) => {
-    // Thích bình luận
-    res.send('Like comment endpoint');
-});
+router.delete(
+    "/:id/:commentId",
+    middlewareController.verifyToken,
+    middlewareController.verifyOwner(Comment, { paramsField: "commentId" }),
+    CommentController.deleteComment
+);
+
+router.put("/:commentId/like", middlewareController.verifyToken, CommentController.likeComment);
 
 export default router;

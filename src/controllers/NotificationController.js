@@ -130,9 +130,48 @@ const NotificationController = {
         } catch (error) {
             res.status(500).json({ message: "Server error", error: error.message });
         }
+    },
+
+    // Xử lý khi click vào notification - mark as read và redirect
+    async handleNotificationClick(req, res) {
+        try {
+            const { notificationId } = req.params;
+            const userId = req.user.id;
+
+            const notification = await Notification.findOneAndUpdate(
+                { _id: notificationId, recipient: userId },
+                { isRead: true },
+                { new: true }
+            ).populate("data.trackId", "_id title")
+            .populate("data.playlistId", "_id title");
+
+            if (!notification) {
+                return res.status(404).json({ message: "Notification not found" });
+            }
+
+            let redirectUrl = "/";
+            
+            if (notification.type === "new_track" && notification.data?.trackId) {
+                redirectUrl = `/track/${notification.data.trackId._id}`;
+            } else if (notification.type === "new_playlist" && notification.data?.playlistId) {
+                redirectUrl = `/playlist/${notification.data.playlistId._id}`;
+            } else if (notification.data?.directLink) {
+                redirectUrl = notification.data.directLink;
+            }
+
+            res.status(200).json({ 
+                message: "Notification clicked successfully", 
+                data: {
+                    notification,
+                    redirectUrl
+                }
+            });
+        } catch (error) {
+            console.error("Error in handleNotificationClick:", error);
+            res.status(500).json({ message: "Server error", error: error.message });
+        }
     }
 };
-
 
 
 // Service functions để tạo thông báo

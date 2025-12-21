@@ -6,6 +6,7 @@ import userRoutes from "./user.js";
 import commentRoutes from "./comments.js";
 import notificationRoutes from "./notification.js";
 import followRoutes from "./follow.js";
+import recognizeRoutes from "./recognize.js"
 
 const routes = {
     auth: authRoutes,
@@ -16,6 +17,7 @@ const routes = {
     comments: commentRoutes,
     notifications: notificationRoutes,
     follow: followRoutes,
+    recognize: recognizeRoutes,
     use: function (app) {
         Object.entries(this).forEach(([key, value]) => {
             if (key !== "use") {
