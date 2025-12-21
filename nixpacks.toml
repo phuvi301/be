@@ -1,15 +1,15 @@
-# 1. Cài đặt các phần mềm cần thiết
+# 1. Cài đặt Node, Python và FFMPEG từ hệ thống Nix
 [phases.setup]
 nixPkgs = ['nodejs', 'python3', 'ffmpeg']
 
-# 2. Cài đặt thư viện (Chạy cả npm install và pip install)
+# 2. Tạo môi trường ảo (venv) và cài thư viện vào đó
 [phases.install]
 cmds = [
     'npm ci',
-    'python3 -m ensurepip',
-    'python3 -m pip install -r requirements.txt'
+    'python3 -m venv .venv', 
+    '. .venv/bin/activate && pip install -r requirements.txt'
 ]
 
-# 3. Chạy server
+# 3. Chạy server (Kích hoạt venv trước khi chạy Node)
 [start]
-cmd = 'npm start'
+cmd = '. .venv/bin/activate && npm start'
