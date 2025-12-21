@@ -79,9 +79,9 @@ const AuthController = {
 
             res.cookie("refreshToken", refreshToken, {
                 httpOnly: true,
-                secure: false,
+                secure: true,
                 path: "/",
-                sameSite: "strict",
+                sameSite: "none",
                 maxAge: REFRESH_TOKEN_EXPIRES_TIME,
             });
 
@@ -140,9 +140,9 @@ const AuthController = {
 
             res.cookie("refreshToken", refreshToken, {
                 httpOnly: true,
-                secure: false,
+                secure: true,
                 path: "/",
-                sameSite: "strict",
+                sameSite: "none",
                 maxAge: REFRESH_TOKEN_EXPIRES_TIME,
             });
 
@@ -214,9 +214,9 @@ const AuthController = {
 
             res.cookie("refreshToken", refreshToken, {
                 httpOnly: true,
-                secure: false,
+                secure: true,
                 path: "/",
-                sameSite: "strict",
+                sameSite: "none",
                 maxAge: REFRESH_TOKEN_EXPIRES_TIME,
             });
 
@@ -292,9 +292,9 @@ const AuthController = {
 
             res.cookie("refreshToken", refreshToken, {
                 httpOnly: true,
-                secure: false,
+                secure: true,
                 path: "/",
-                sameSite: "strict",
+                sameSite: "none",
                 maxAge: REFRESH_TOKEN_EXPIRES_TIME,
             });
 
@@ -382,9 +382,9 @@ const AuthController = {
                 await newRefreshTokenDoc.save();
                 res.cookie("refreshToken", newRefreshToken, {
                     httpOnly: true,
-                    secure: false,
+                    secure: true,
                     path: "/",
-                    sameSite: "strict",
+                    sameSite: "none",
                     maxAge: REFRESH_TOKEN_EXPIRES_TIME,
                 });
                 res.status(200).json({

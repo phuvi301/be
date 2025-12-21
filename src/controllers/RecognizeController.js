@@ -13,7 +13,7 @@ const RecognizeController = {
             const audioFile = req.file;
 
             const pythonScriptPath = join(__dirname, '..', '..', 'src', 'service', 'shazamService.py');
-            const pythonProcess = spawn('python', [pythonScriptPath]);
+            const pythonProcess = spawn('python3', [pythonScriptPath]);
 
             pythonProcess.stdin.write(audioFile.buffer);
             pythonProcess.stdin.end();
