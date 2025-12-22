@@ -59,7 +59,6 @@ const CommentController = {
     },
 
     createCommentBlock: async (req, res) => {
-        console.log(1)
         try {
             const id = req.body?.id;
             const type = req.body?.type;
