@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import Track from "../models/Track.js";
 import Playlist from "../models/Playlists.js";
 import redisService from "../service/redisService.js";
+import { NotificationService } from "./NotificationController.js";
 
 const UserController = {
     isOwner: (reqId, acpId) => reqId && reqId.toString() === acpId.toString(),
@@ -97,12 +98,32 @@ const UserController = {
             if (!trackInfo) return res.status(404).json({ message: "Track not found" });
             if (trackInfo.status == "private" && !UserController.isOwner(user._id, trackInfo.owner))
                 return res.status(403).json({ message: "Permission deny" });
-            user.likedTracks = user.likedTracks.includes(trackInfo._id)
-                ? user.likedTracks.filter((track) => track.toString() !== trackInfo._id.toString())
-                : [...user.likedTracks, trackInfo._id];
+            
+            const isCurrentlyLiked = user.likedTracks.includes(trackInfo._id);
+            
+            if (isCurrentlyLiked) {
+                user.likedTracks = user.likedTracks.filter((track) => track.toString() !== trackInfo._id.toString());
+                
+                const currentTrack = await Track.findById(req.params.trackId);
+                const newLikeCount = Math.max(0, (currentTrack.likeCount || 0) - 1);
+                await Track.findByIdAndUpdate(req.params.trackId, { likeCount: newLikeCount });
+            } else {
+                user.likedTracks = [...user.likedTracks, trackInfo._id];
+                await Track.findByIdAndUpdate(req.params.trackId, { $inc: { likeCount: 1 } });
+                
+                await NotificationService.trackLikeNotification(req.params.trackId, user._id, trackInfo.owner);
+            }
+            
             await user.save();
+            
+            const updatedTrack = await Track.findById(req.params.trackId).select('likeCount');
+            
             res.status(200).json({
                 message: "Update liked track successfully",
+                data: {
+                    isLiked: !isCurrentlyLiked,
+                    likeCount: updatedTrack.likeCount
+                }
             });
         } catch (error) {
             console.log(error);

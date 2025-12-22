@@ -6,7 +6,7 @@ const NotificationSchema = new mongoose.Schema(
         sender: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
         type: { 
             type: String, 
-            enum: ["new_track", "new_playlist"], 
+            enum: ["new_track", "new_playlist", "new_follow", "track_liked"], 
             required: true 
         },
         title: { type: String, required: true },
@@ -14,6 +14,8 @@ const NotificationSchema = new mongoose.Schema(
         data: {
             trackId: { type: mongoose.Schema.Types.ObjectId, ref: "Track" },
             playlistId: { type: mongoose.Schema.Types.ObjectId, ref: "Playlist" },
+            followerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+            likerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
             releaseDate: { type: Date },
             directLink: { type: String }
         },
