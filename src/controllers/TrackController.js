@@ -239,9 +239,9 @@ const TrackController = {
 
             res.cookie("duration", result.duration, {
                 httpOnly: true,
-                secure: false,
+                secure: true,
                 path: "/",
-                sameSite: "strict",
+                sameSite: "none",
                 maxAge: 15 * 60 * 1000,
             });
 

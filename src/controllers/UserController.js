@@ -2,9 +2,10 @@ import User from "../models/User.js";
 import Track from "../models/Track.js";
 import Playlist from "../models/Playlists.js";
 import redisService from "../service/redisService.js";
+import { NotificationService } from "./NotificationController.js";
 
 const UserController = {
-    isOwner: (reqId, acpId) => reqId && reqId === acpId,
+    isOwner: (reqId, acpId) => reqId && reqId.toString() === acpId.toString(),
     filterPassword: (user) => (({ password, ...newUser }) => newUser)(user),
     getUser: async (req, res) => {
         try {
@@ -90,6 +91,46 @@ const UserController = {
         }
     },
 
+    updateLikedTrack: async (req, res) => {
+        try {
+            const user = req.resource;
+            const trackInfo = await Track.findById(req.params.trackId);
+            if (!trackInfo) return res.status(404).json({ message: "Track not found" });
+            if (trackInfo.status == "private" && !UserController.isOwner(user._id, trackInfo.owner))
+                return res.status(403).json({ message: "Permission deny" });
+            
+            const isCurrentlyLiked = user.likedTracks.includes(trackInfo._id);
+            
+            if (isCurrentlyLiked) {
+                user.likedTracks = user.likedTracks.filter((track) => track.toString() !== trackInfo._id.toString());
+                
+                const currentTrack = await Track.findById(req.params.trackId);
+                const newLikeCount = Math.max(0, (currentTrack.likeCount || 0) - 1);
+                await Track.findByIdAndUpdate(req.params.trackId, { likeCount: newLikeCount });
+            } else {
+                user.likedTracks = [...user.likedTracks, trackInfo._id];
+                await Track.findByIdAndUpdate(req.params.trackId, { $inc: { likeCount: 1 } });
+                
+                await NotificationService.trackLikeNotification(req.params.trackId, user._id, trackInfo.owner);
+            }
+            
+            await user.save();
+            
+            const updatedTrack = await Track.findById(req.params.trackId).select('likeCount');
+            
+            res.status(200).json({
+                message: "Update liked track successfully",
+                data: {
+                    isLiked: !isCurrentlyLiked,
+                    likeCount: updatedTrack.likeCount
+                }
+            });
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ message: "Server error", error: error.message });
+        }
+    },
+
     // Thêm bài hát vào mục "Đã nghe gần đây"
     addTrackToHis: async (req, res) => {
         try {
@@ -162,6 +203,73 @@ const UserController = {
             tracks: tracks
         });
 
+        } catch (error) {
+            res.status(500).json({ message: "Internal server error", error });
+        }
+    },
+    
+    getArtistProfile  : async (req, res) => {
+        try {
+        const { id } = req.params;
+
+        // 1. Lấy thông tin nghệ sĩ
+        // Giả sử model User có trường nickname, avatar/thumbnailUrl
+        const artist = await User.findById(id).select("nickname thumbnailUrl email"); 
+
+        if (!artist) {
+            return res.status(404).json({ message: "Artist not found" });
+        }
+
+        // 2. Lấy tất cả bài hát của nghệ sĩ đó (Giả sử Track có trường 'owner' hoặc 'artistId')
+        // Sắp xếp theo lượt nghe giảm dần (để hiển thị bài phổ biến trước)
+        const tracks = await Track.find({ owner: id }).sort({ playCount: -1 });
+
+        // 3. Tính tổng lượt nghe (Monthly listeners giả lập)
+        const totalPlays = tracks.reduce((sum, track) => sum + (track.playCount || 0), 0);
+
+        res.status(200).json({
+            artist: {
+                _id: artist._id,
+                name: artist.nickname || artist.username,
+                thumbnailUrl: artist.thumbnailUrl,
+                totalPlays: totalPlays
+            },
+            tracks: tracks
+        });
+
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error", error });
+    }
+    },
+
+    getArtistProfile: async (req, res) => {
+        try {
+            const { id } = req.params;
+
+            // 1. Lấy thông tin nghệ sĩ
+            // Giả sử model User có trường nickname, avatar/thumbnailUrl
+            const artist = await User.findById(id).select("nickname thumbnailUrl email");
+
+            if (!artist) {
+                return res.status(404).json({ message: "Artist not found" });
+            }
+
+            // 2. Lấy tất cả bài hát của nghệ sĩ đó (Giả sử Track có trường 'owner' hoặc 'artistId')
+            // Sắp xếp theo lượt nghe giảm dần (để hiển thị bài phổ biến trước)
+            const tracks = await Track.find({ owner: id }).sort({ playCount: -1 });
+
+            // 3. Tính tổng lượt nghe (Monthly listeners giả lập)
+            const totalPlays = tracks.reduce((sum, track) => sum + (track.playCount || 0), 0);
+
+            res.status(200).json({
+                artist: {
+                    _id: artist._id,
+                    name: artist.nickname || artist.username,
+                    thumbnailUrl: artist.thumbnailUrl,
+                    totalPlays: totalPlays,
+                },
+                tracks: tracks,
+            });
         } catch (error) {
             res.status(500).json({ message: "Internal server error", error });
         }

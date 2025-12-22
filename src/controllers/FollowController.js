@@ -1,5 +1,6 @@
 import Follow from "../models/Follow.js";
 import User from "../models/User.js";
+import { NotificationService } from "./NotificationController.js";
 
 const FollowController = {
     // Follow một nghệ sĩ
@@ -43,6 +44,8 @@ const FollowController = {
             await User.findByIdAndUpdate(followerId, {
                 $inc: { followingCount: 1 }
             });
+
+            await NotificationService.newFollowNotification(followerId, userId);
 
             res.status(200).json({ message: "Followed successfully" });
         } catch (error) {
