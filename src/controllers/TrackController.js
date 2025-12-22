@@ -125,6 +125,11 @@ const TrackController = {
 
                 // Gộp kết quả lại
                 recommendedTracks = [...recommendedTracks, ...randomTracks];
+
+                for (let i = recommendedTracks.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1)); 
+                    [recommendedTracks[i], recommendedTracks[j]] = [recommendedTracks[j], recommendedTracks[i]];
+                }
             }
             // B3: Lưu kết quả vào Redis với thời hạn 24 giờ
             if (recommendedTracks.length > 0) {
